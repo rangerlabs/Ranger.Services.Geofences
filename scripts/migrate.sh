@@ -1,0 +1,1 @@
+dotnet ef database update -p ./src/Ranger.Services.Geofences.Data/Ranger.Services.Geofences.Data.csproj -c geofencesDbContext -s ./src/Ranger.Services.Geofences/Ranger.Services.Geofences.csproj 

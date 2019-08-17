@@ -1,0 +1,19 @@
+version: "3.5"
+services:
+    api:
+        image: ranger.services.geofences:dev
+        container_name: geofences
+        ports:
+            - "8084:8084"
+        networks:
+            - geofences
+            - ranger
+
+networks:
+    ranger:
+        name: ranger-network
+        external: true
+
+    geofences:
+        name: geofences-network
+        external: true
