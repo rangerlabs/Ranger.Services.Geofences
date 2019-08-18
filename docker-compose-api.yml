@@ -4,7 +4,7 @@ services:
         image: ranger.services.geofences:dev
         container_name: geofences
         ports:
-            - "8084:8084"
+            - "8085:8085"
         networks:
             - geofences
             - ranger
