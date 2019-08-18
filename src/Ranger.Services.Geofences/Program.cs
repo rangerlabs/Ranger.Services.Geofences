@@ -30,6 +30,7 @@ namespace Ranger.Services.Geofences {
                 var env = scope.ServiceProvider.GetRequiredService<IHostingEnvironment> ();
 
                 dbInitializer.Migrate ();
+                dbInitializer.EnsureRowLevelSecurityApplied ();
             }
             host.Run ();
         }

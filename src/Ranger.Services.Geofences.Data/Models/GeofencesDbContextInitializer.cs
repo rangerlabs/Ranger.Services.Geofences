@@ -21,10 +21,19 @@ namespace Ranger.Services.Geofences.Data {
         public void Migrate () {
             context.Database.Migrate ();
         }
+
+        public async Task EnsureRowLevelSecurityApplied () {
+            var tables = Enum.GetNames (typeof (RowLevelSecureTablesEnum));
+            var loginRoleRepository = new LoginRoleRepository<GeofencesDbContext> (context);
+            foreach (var table in tables) {
+                await loginRoleRepository.CreateTenantLoginPolicy (table);
+            }
+        }
     }
 
     public interface IGeofencesDbContextInitializer {
         bool EnsureCreated ();
         void Migrate ();
+        Task EnsureRowLevelSecurityApplied ();
     }
 }

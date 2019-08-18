@@ -74,7 +74,10 @@ namespace Ranger.Services.Geofences {
             applicationLifetime.ApplicationStopping.Register (OnShutdown);
             app.UseAuthentication ();
             app.UseMvcWithDefaultRoute ();
-            this.busSubscriber = app.UseRabbitMQ ();
+            this.busSubscriber = app.UseRabbitMQ ()
+                .SubscribeCommand<InitializeTenant> ((c, e) =>
+                    new GeofencesInitializeTenantRejected (e.Message, "")
+                );
         }
 
         private void OnShutdown () {
