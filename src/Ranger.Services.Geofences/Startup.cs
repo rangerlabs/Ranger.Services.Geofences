@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Ranger.Common;
 using Ranger.RabbitMQ;
 using Ranger.Services.Geofences.Data;
 
@@ -48,6 +49,7 @@ namespace Ranger.Services.Geofences {
             );
 
             services.AddTransient<IGeofencesDbContextInitializer, GeofencesDbContextInitializer> ();
+            services.AddTransient<ILoginRoleRepository<GeofencesDbContext>, LoginRoleRepository<GeofencesDbContext>> ();
 
             services.AddAuthentication ("Bearer")
                 .AddIdentityServerAuthentication (options => {
