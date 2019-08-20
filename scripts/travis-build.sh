@@ -7,7 +7,7 @@ case "$TRAVIS_BRANCH" in
     ;;
   "dev")
     DOCKER_TAG=dev
-    ;;    
+    ;;
 esac
 
-docker build -t $DOCKER_USERNAME/ranger.services.geofences:$DOCKER_TAG --build-arg MYGET_API_KEY=$MYGET_KEY .
+docker build -t rangerlabs/ranger.services.geofences:$DOCKER_TAG --build-arg MYGET_API_KEY=$MYGET_KEY .
