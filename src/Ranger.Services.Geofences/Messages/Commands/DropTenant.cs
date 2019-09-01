@@ -2,7 +2,7 @@ using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Geofences
 {
-    [MessageNamespace("operations")]
+    [MessageNamespace("geofences")]
     public class DropTenant : ICommand
     {
         public string DatabaseUsername { get; }
