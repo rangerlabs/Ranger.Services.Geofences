@@ -26,7 +26,6 @@ namespace Ranger.Services.Geofences
 
         public async Task HandleAsync(InitializeTenant command, ICorrelationContext context)
         {
-            throw new RangerException("Fake exception");
             await this.loginRoleRepository.CreateTenantLoginRole(command.DatabaseUsername, command.DatabasePassword);
             logger.LogInformation($"New tenant login '{command.DatabaseUsername}' added to Geofences database.");
 
