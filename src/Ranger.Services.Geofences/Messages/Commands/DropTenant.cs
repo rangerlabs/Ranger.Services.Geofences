@@ -3,15 +3,13 @@ using Ranger.RabbitMQ;
 namespace Ranger.Services.Geofences
 {
     [MessageNamespace("geofences")]
-    public class InitializeTenant : ICommand
+    public class DropTenant : ICommand
     {
         public string DatabaseUsername { get; }
-        public string DatabasePassword { get; }
 
-        public InitializeTenant(string databaseUsername, string databasePassword)
+        public DropTenant(string databaseUsername)
         {
             this.DatabaseUsername = databaseUsername;
-            this.DatabasePassword = databasePassword;
         }
     }
 }

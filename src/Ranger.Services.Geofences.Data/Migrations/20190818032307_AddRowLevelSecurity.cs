@@ -1,15 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 using Ranger.Common;
 
-namespace Ranger.Services.Geofences.Data.Migrations {
-    public partial class AddRowLevelSecurity : Migration {
-        protected override void Up (MigrationBuilder migrationBuilder) {
-            migrationBuilder.Sql (MultiTenantMigrationMethods.CreateTenantLoginRole ());
-            migrationBuilder.Sql (MultiTenantMigrationMethods.CreateTenantLoginRolePermissions ());
-            migrationBuilder.Sql (MultiTenantMigrationMethods.CreateTenantPolicy ());
+namespace Ranger.Services.Geofences.Data.Migrations
+{
+    public partial class AddRowLevelSecurity : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.Sql(MultiTenantMigrationSql.CreateTenantRlsPolicy());
+            migrationBuilder.Sql(MultiTenantMigrationSql.CreateTenantLoginRole());
+            migrationBuilder.Sql(MultiTenantMigrationSql.GrantTenantLoginRoleTablePermissions());
+            migrationBuilder.Sql(MultiTenantMigrationSql.GrantTenantLoginRoleSequencePermissions());
+            migrationBuilder.Sql(MultiTenantMigrationSql.RevokeTenantLoginRoleSequencePermissions());
+            migrationBuilder.Sql(MultiTenantMigrationSql.RevokeTenantLoginRoleTablePermissions());
+            migrationBuilder.Sql(MultiTenantMigrationSql.DropTenantLoginRole());
         }
 
-        protected override void Down (MigrationBuilder migrationBuilder) {
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
 
         }
     }
