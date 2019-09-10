@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.4" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.4.0" />
     <PackageReference Include="Ranger.Monitoring" Version="1.0.1" />
-    <PackageReference Include="Ranger.RabbitMQ" Version="1.0.46" />
+    <PackageReference Include="Ranger.RabbitMQ" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Geofences.Data\Ranger.Services.Geofences.Data.csproj" />
