@@ -1,7 +1,6 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS restore
 WORKDIR /app
 
-ARG MYGET_API_KEY
 ARG BUILD_CONFIG="Release"
 
 RUN mkdir -p /app/vsdbg && touch /app/vsdbg/touched
@@ -14,18 +13,25 @@ RUN if [ "${BUILD_CONFIG}" = "Debug" ]; then \
     fi
 ENV DEBIAN_FRONTEND teletype
 
+ARG MYGET_API_KEY
+
 COPY *.sln ./
-COPY ./src ./src
-COPY ./test ./test
+COPY ./src/Ranger.Services.Geofences/Ranger.Services.Geofences.csproj ./src/Ranger.Services.Geofences/Ranger.Services.Geofences.csproj
+COPY ./src/Ranger.Services.Geofences.Data/Ranger.Services.Geofences.Data.csproj ./src/Ranger.Services.Geofences.Data/Ranger.Services.Geofences.Data.csproj
 COPY ./scripts ./scripts
 
 RUN ./scripts/create-nuget-config.sh ${MYGET_API_KEY}
-RUN dotnet publish -c ${BUILD_CONFIG} -o /app/published 
+RUN dotnet restore
 
-FROM microsoft/dotnet:aspnetcore-runtime
+COPY ./src ./src
+COPY ./test ./test
+
+RUN dotnet publish -c ${BUILD_CONFIG} -o /app/published --no-restore
+
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 WORKDIR /app
-COPY --from=build-env /app/published .
-COPY --from=build-env /app/vsdbg ./vsdbg
+COPY --from=restore /app/published .
+COPY --from=restore /app/vsdbg ./vsdbg
 
 ARG BUILD_CONFIG="Release"
 ARG ASPNETCORE_ENVIRONMENT="Production"
@@ -38,5 +44,5 @@ RUN if [ "${BUILD_CONFIG}" = "Debug" ]; then \
     fi
 ENV DEBIAN_FRONTEND teletype
 
-EXPOSE 8085
+EXPOSE 8086
 ENTRYPOINT ["dotnet", "Ranger.Services.Geofences.dll"]
