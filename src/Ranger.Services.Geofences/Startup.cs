@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.Common;
+using Ranger.Mongo;
 using Ranger.RabbitMQ;
 using Ranger.Services.Geofences.Data;
 
@@ -68,8 +69,6 @@ namespace Ranger.Services.Geofences
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "geofencesApi";
 
-                    //TODO: Change these to true
-                    options.EnableCaching = false;
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -82,6 +81,7 @@ namespace Ranger.Services.Geofences
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.AddRabbitMq(loggerFactory);
+            builder.AddMongo();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
