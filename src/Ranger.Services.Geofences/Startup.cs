@@ -62,6 +62,8 @@ namespace Ranger.Services.Geofences
 
             services.AddTransient<IGeofencesDbContextInitializer, GeofencesDbContextInitializer>();
             services.AddTransient<ILoginRoleRepository<GeofencesDbContext>, LoginRoleRepository<GeofencesDbContext>>();
+            services.AddTransient<IGeofenceRepository, GeofenceRepository>();
+            services.AddSingleton<IMongoDbSeeder, GeofenceSeeder>();
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
@@ -80,13 +82,14 @@ namespace Ranger.Services.Geofences
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            builder.AddRabbitMq(loggerFactory);
+            builder.AddRabbitMq();
             builder.AddMongo();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
+            var logger = loggerFactory.CreateLogger<Startup>();
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
             app.UseRouting();
@@ -100,11 +103,20 @@ namespace Ranger.Services.Geofences
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
                 );
+            this.InitializeMongoDb(app, logger);
         }
 
         private void OnShutdown()
         {
             this.busSubscriber.Dispose();
+        }
+
+        private void InitializeMongoDb(IApplicationBuilder app, ILogger<Startup> logger)
+        {
+            logger.LogInformation("Initializing MongoDB.");
+            var mongoInitializer = app.ApplicationServices.GetService<IMongoDbInitializer>();
+            mongoInitializer.Initialize();
+            logger.LogInformation("MongoDB Initialized.");
         }
     }
 }
