@@ -1,22 +1,31 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ranger.Common;
 using Ranger.RabbitMQ;
-using Ranger.Services.Geofences.Data;
 
 namespace Ranger.Services.Geofences
 {
+    [MessageNamespaceAttribute("geofences")]
     public class CreateGeofence : ICommand
     {
-        public CreateGeofence(string name, string projectName, GeofenceShapeEnum shape, IEnumerable<LngLat> coordinates, IEnumerable<string> labels = null, IEnumerable<string> integrationIds = null, IDictionary<string, object> metadata = null, string description = null, int radius = 0, bool enabled = true, bool onEnter = true, bool onExit = true, DateTime? expirationDate = null, DateTime? launchDate = null, Schedule schedule = null)
+        public CreateGeofence(string commandingUserEmailOrTokenPrefix, string domain, string externalId, string projectId, GeofenceShapeEnum shape, IEnumerable<LngLat> coordinates, IEnumerable<string> labels = null, IEnumerable<string> integrationIds = null, IDictionary<string, object> metadata = null, string description = null, int radius = 0, bool enabled = true, bool onEnter = true, bool onExit = true, DateTime? expirationDate = null, DateTime? launchDate = null, Schedule schedule = null)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
-                throw new System.ArgumentException($"{nameof(name)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
             }
-            if (string.IsNullOrWhiteSpace(projectName))
+            if (string.IsNullOrWhiteSpace(domain))
             {
-                throw new System.ArgumentException($"{nameof(projectName)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(domain)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(externalId))
+            {
+                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(projectId))
+            {
+                throw new System.ArgumentException($"{nameof(projectId)} was null or whitespace.");
             }
             if (coordinates is null)
             {
@@ -27,12 +36,15 @@ namespace Ranger.Services.Geofences
                 throw new ArgumentOutOfRangeException($"{nameof(coordinates)} must not be empty.");
             }
 
+            this.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
+
             this.Coordinates = coordinates;
             this.Shape = shape;
             this.Radius = Radius;
 
-            this.Name = name;
-            this.ProjectName = projectName;
+            this.Domain = domain;
+            this.ExternalId = externalId;
+            this.ProjectId = projectId;
             this.Labels = labels ?? new List<string>();
             this.IntegrationIds = integrationIds ?? new List<string>();
             this.Metadata = metadata ?? new Dictionary<string, object>();
@@ -43,11 +55,12 @@ namespace Ranger.Services.Geofences
             this.Enabled = enabled;
             this.OnEnter = onEnter;
             this.OnExit = onExit;
-
         }
 
-        public string Name { get; }
-        public string ProjectName { get; }
+        public string CommandingUserEmailOrTokenPrefix { get; }
+        public string Domain { get; }
+        public string ExternalId { get; }
+        public string ProjectId { get; }
         public IEnumerable<string> Labels { get; }
         public bool OnEnter { get; } = true;
         public bool OnExit { get; } = true;
@@ -58,8 +71,8 @@ namespace Ranger.Services.Geofences
         public int Radius { get; }
         public IDictionary<string, object> Metadata { get; }
         public GeofenceShapeEnum Shape { get; }
-        public DateTime ExpirationDate { get; set; }
-        public DateTime LaunchDate { get; set; }
-        public Schedule Schedule { get; set; }
+        public DateTime ExpirationDate { get; }
+        public DateTime LaunchDate { get; }
+        public Schedule Schedule { get; }
     }
 }

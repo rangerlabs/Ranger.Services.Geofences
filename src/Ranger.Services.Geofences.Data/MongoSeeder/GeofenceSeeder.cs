@@ -25,9 +25,9 @@ namespace Ranger.Services.Geofences.Data
             {
                 IList<CreateIndexModel<Geofence>> indexModels = new List<CreateIndexModel<Geofence>>();
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.Shape)));
-                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Geo2DSphere(_ => _.GeoJSON)));
-                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.Name).Ascending(_ => _.ProjectName), new CreateIndexOptions() { Unique = true }));
-                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.ProjectName).Ascending(_ => _.PgsqlDatabaseUsername), new CreateIndexOptions() { Unique = true }));
+                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Geo2DSphere(_ => _.GeoJsonGeometry)));
+                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.ExternalId).Ascending(_ => _.ProjectId), new CreateIndexOptions() { Unique = true }));
+                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.ProjectId).Ascending(_ => _.PgsqlDatabaseUsername)));
                 await collection.Indexes.CreateManyAsync(indexModels);
             }
             catch (Exception ex)

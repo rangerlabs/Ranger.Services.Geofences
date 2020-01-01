@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using MongoDB.Driver.GeoJsonObjectModel;
+using Ranger.Common;
 using Ranger.Mongo;
 
 namespace Ranger.Services.Geofences.Data
@@ -10,11 +12,11 @@ namespace Ranger.Services.Geofences.Data
         { }
 
         public GeofenceShapeEnum Shape { get; set; }
-        public GeoJSON GeoJSON { get; set; }
+        public GeoJsonGeometry<GeoJson2DGeographicCoordinates> GeoJsonGeometry { get; set; }
         public int Radius { get; set; }
 
-        public string Name { get; set; }
-        public string ProjectName { get; set; }
+        public string ExternalId { get; set; }
+        public string ProjectId { get; set; }
         public string Description { get; set; }
         public IEnumerable<string> Labels { get; set; }
         public IEnumerable<string> IntegrationIds { get; set; }

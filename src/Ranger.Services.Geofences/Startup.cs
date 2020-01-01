@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.Common;
+using Ranger.InternalHttpClient;
 using Ranger.Mongo;
 using Ranger.RabbitMQ;
 using Ranger.Services.Geofences.Data;
@@ -51,6 +52,11 @@ namespace Ranger.Services.Geofences
                     {
                         policyBuilder.RequireScope("geofencesApi");
                     });
+            });
+
+            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
+            {
+                return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
             });
 
             services.AddEntityFrameworkNpgsql().AddDbContext<GeofencesDbContext>(options =>
@@ -102,7 +108,11 @@ namespace Ranger.Services.Geofences
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
+                )
+                .SubscribeCommand<CreateGeofence>((c, e) =>
+                    new CreateGeofenceRejected(e.Message, "")
                 );
+
             this.InitializeMongoDb(app, logger);
         }
 
