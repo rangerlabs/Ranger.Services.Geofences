@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Google.Common.Geometry;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
@@ -45,6 +49,8 @@ namespace Ranger.Services.Geofences
                 throw;
             }
 
+            getCentroid(command.Coordinates);
+
             var geofence = new Geofence(Guid.NewGuid(), tenant.DatabaseUsername);
             geofence.ExternalId = command.ExternalId;
             geofence.ProjectId = command.ProjectId;
@@ -52,6 +58,7 @@ namespace Ranger.Services.Geofences
             geofence.Enabled = command.Enabled;
             geofence.ExpirationDate = command.ExpirationDate;
             geofence.GeoJsonGeometry = GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates);
+            // geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? getCentroid(command.Coordinates) : null;
             geofence.Labels = command.Labels;
             geofence.IntegrationIds = command.IntegrationIds;
             geofence.LaunchDate = command.LaunchDate;
@@ -61,6 +68,7 @@ namespace Ranger.Services.Geofences
             geofence.Radius = command.Radius;
             geofence.Schedule = command.Schedule;
             geofence.Shape = command.Shape;
+            geofence.TimeZoneId = "Americas/New_York";
 
             try
             {
@@ -79,6 +87,27 @@ namespace Ranger.Services.Geofences
                 throw new RangerException("Failed to add geofence.", ex);
             }
             busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
+        }
+
+        private void getCentroid(IEnumerable<LngLat> coordinates)
+        {
+            var s2PolygonBuilder = new S2PolygonBuilder();
+            var latLngs = coordinates.Select(c => S2LatLng.FromDegrees(c.Lat, c.Lng));
+            var s2Loop = new List<S2Loop>() { new S2Loop(latLngs.Select(_ => _.ToPoint())) };
+            var unusedEdges = new List<S2Edge>();
+            if (!s2PolygonBuilder.AssembleLoops(s2Loop, unusedEdges))
+            {
+                logger.LogInformation($"Unused edges ({unusedEdges.Select(_ => $"{{{_.Start}, {_.End}}}")}) were found in the polygon LngLat coordinates ({String.Join(";", coordinates.Select(_ => $"{{{_.Lng}, {_.Lat}}}"))}).");
+                throw new RangerException("Invalid edges were found in the requested polygon coordinates.");
+            }
+            var s2Polygon = s2PolygonBuilder.AssemblePolygon();
+            s2Polygon.
+            var s2AreaCentroid = s2Polygon.AreaAndCentroid;
+            if (s2AreaCentroid.Area < 10000)
+            {
+                throw new RangerException("Polygon geofences must enclose an area greater than 10,000 meters.");
+            }
+            logger.LogInformation($"Computed the centroid of the polygon to be {s2AreaCentroid.Centroid.Value.ToDegreesString()}");
         }
     }
 }

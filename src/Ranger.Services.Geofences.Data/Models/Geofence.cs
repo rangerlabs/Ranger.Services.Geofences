@@ -13,6 +13,7 @@ namespace Ranger.Services.Geofences.Data
 
         public GeofenceShapeEnum Shape { get; set; }
         public GeoJsonGeometry<GeoJson2DGeographicCoordinates> GeoJsonGeometry { get; set; }
+        public GeoJsonGeometry<GeoJson2DGeographicCoordinates> PolygonCentroid { get; set; }
         public int Radius { get; set; }
 
         public string ExternalId { get; set; }
@@ -27,5 +28,6 @@ namespace Ranger.Services.Geofences.Data
         public DateTime ExpirationDate { get; set; }
         public DateTime LaunchDate { get; set; }
         public Schedule Schedule { get; set; }
+        public string TimeZoneId { get; set; }
     }
 }
