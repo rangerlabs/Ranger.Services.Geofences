@@ -30,7 +30,13 @@ namespace Ranger.Services.Geofences.Data
                         {
                             throw new ArgumentOutOfRangeException("Coordinates for polygon geofences must contain greater than three points.");
                         }
-                        return GeoJson.Polygon<GeoJson2DGeographicCoordinates>(coordinates.Select(_ => new GeoJson2DGeographicCoordinates(_.Lng, _.Lat)).ToArray());
+                        if (coordinates.First().Equals(coordinates.Last()))
+                        {
+                            throw new RangerException("The first and last coordinates in a polygon are implicitely connected. Remove the explicit closing edge.");
+                        }
+
+                        var mongoCoordinates = coordinates.Append(coordinates.First());
+                        return GeoJson.Polygon<GeoJson2DGeographicCoordinates>(mongoCoordinates.Select(_ => new GeoJson2DGeographicCoordinates(_.Lng, _.Lat)).ToArray());
                     }
                 default:
                     {

@@ -49,7 +49,6 @@ namespace Ranger.Services.Geofences
                 throw;
             }
 
-            getCentroid(command.Coordinates);
 
             var geofence = new Geofence(Guid.NewGuid(), tenant.DatabaseUsername);
             geofence.ExternalId = command.ExternalId;
@@ -58,7 +57,7 @@ namespace Ranger.Services.Geofences
             geofence.Enabled = command.Enabled;
             geofence.ExpirationDate = command.ExpirationDate;
             geofence.GeoJsonGeometry = GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates);
-            // geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? getCentroid(command.Coordinates) : null;
+            geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? getCentroid(command.Coordinates) : null;
             geofence.Labels = command.Labels;
             geofence.IntegrationIds = command.IntegrationIds;
             geofence.LaunchDate = command.LaunchDate;
@@ -89,25 +88,27 @@ namespace Ranger.Services.Geofences
             busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
         }
 
-        private void getCentroid(IEnumerable<LngLat> coordinates)
+        private GeoJsonPoint<GeoJson2DGeographicCoordinates> getCentroid(IEnumerable<LngLat> coordinates)
         {
-            var s2PolygonBuilder = new S2PolygonBuilder();
-            var latLngs = coordinates.Select(c => S2LatLng.FromDegrees(c.Lat, c.Lng));
-            var s2Loop = new List<S2Loop>() { new S2Loop(latLngs.Select(_ => _.ToPoint())) };
-            var unusedEdges = new List<S2Edge>();
-            if (!s2PolygonBuilder.AssembleLoops(s2Loop, unusedEdges))
-            {
-                logger.LogInformation($"Unused edges ({unusedEdges.Select(_ => $"{{{_.Start}, {_.End}}}")}) were found in the polygon LngLat coordinates ({String.Join(";", coordinates.Select(_ => $"{{{_.Lng}, {_.Lat}}}"))}).");
-                throw new RangerException("Invalid edges were found in the requested polygon coordinates.");
-            }
-            var s2Polygon = s2PolygonBuilder.AssemblePolygon();
-            s2Polygon.
+
+            var latLngs = coordinates.Reverse().Select(c => S2LatLng.FromDegrees(c.Lat, c.Lng));
+            var s2Loop = new S2Loop(latLngs.Select(_ => _.ToPoint()));
+            s2Loop.Normalize();
+            var s2Polygon = new S2Polygon(s2Loop);
+            // if (!s2PolygonBuilder.AssembleLoops(s2Loop, unusedEdges))
+            // {
+            //     logger.LogInformation($"Unused edges ({unusedEdges.Select(_ => $"{{{_.Start}, {_.End}}}")}) were found in the polygon LngLat coordinates ({String.Join(";", coordinates.Select(_ => $"{{{_.Lng}, {_.Lat}}}"))}).");
+            //     throw new RangerException("Invalid edges were found in the requested polygon coordinates.");
+            // }
             var s2AreaCentroid = s2Polygon.AreaAndCentroid;
-            if (s2AreaCentroid.Area < 10000)
+            var area = s2AreaCentroid.Area * S2LatLng.EarthRadiusMeters * S2LatLng.EarthRadiusMeters;
+            logger.LogInformation($"Computed the area of the polygon to be {area} and the centroid to be {s2AreaCentroid.Centroid.Value.ToDegreesString()}");
+            if (area < 10000)
             {
                 throw new RangerException("Polygon geofences must enclose an area greater than 10,000 meters.");
             }
-            logger.LogInformation($"Computed the centroid of the polygon to be {s2AreaCentroid.Centroid.Value.ToDegreesString()}");
+            var centroid = new S2LatLng(s2Polygon.Centroid.Value);
+            return GeoJson.Point<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(centroid.LngDegrees, centroid.LatDegrees));
         }
     }
 }

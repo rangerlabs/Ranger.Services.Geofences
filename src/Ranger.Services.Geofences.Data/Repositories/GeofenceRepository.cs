@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using Ranger.Common;
 using Ranger.Mongo;
 
@@ -40,14 +41,14 @@ namespace Ranger.Services.Geofences.Data
             .As<Geofence>()
             .ToListAsync();
 
-            return geofences.Select(_ =>
+            var geofenceResponse = geofences.Select(_ =>
                 new GeofenceResponseModel()
                 {
                     Enabled = _.Enabled,
                     Description = _.Description,
                     ExpirationDate = _.ExpirationDate,
                     ExternalId = _.ExternalId,
-                    LngLat = new LngLat(90, 180),
+                    Coordinates = getCoordinatesByShape(_.Shape, _.GeoJsonGeometry),
                     IntegrationIds = _.IntegrationIds,
                     Labels = _.Labels,
                     LaunchDate = _.LaunchDate,
@@ -60,6 +61,26 @@ namespace Ranger.Services.Geofences.Data
                     Shape = _.Shape
                 }
             );
+            return geofenceResponse;
+        }
+
+        private IEnumerable<LngLat> getCoordinatesByShape(GeofenceShapeEnum shape, GeoJsonGeometry<GeoJson2DGeographicCoordinates> geoJsonGeometry)
+        {
+            switch (shape)
+            {
+                case GeofenceShapeEnum.Circle:
+                    {
+                        var point = (geoJsonGeometry as GeoJsonPoint<GeoJson2DGeographicCoordinates>);
+                        return new LngLat[] { new LngLat(point.Coordinates.Longitude, point.Coordinates.Latitude) };
+                    }
+                case GeofenceShapeEnum.Polygon:
+                    {
+                        var points = (geoJsonGeometry as GeoJsonPolygon<GeoJson2DGeographicCoordinates>).Coordinates.Exterior.Positions.Select(_ => new LngLat(_.Longitude, _.Latitude));
+                        return points;
+                    }
+                default:
+                    return new LngLat[0];
+            }
         }
     }
 }
