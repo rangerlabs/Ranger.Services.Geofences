@@ -75,7 +75,8 @@ namespace Ranger.Services.Geofences.Data
                     }
                 case GeofenceShapeEnum.Polygon:
                     {
-                        var points = (geoJsonGeometry as GeoJsonPolygon<GeoJson2DGeographicCoordinates>).Coordinates.Exterior.Positions.Select(_ => new LngLat(_.Longitude, _.Latitude));
+                        var count = (geoJsonGeometry as GeoJsonPolygon<GeoJson2DGeographicCoordinates>).Coordinates.Exterior.Positions.Count();
+                        var points = (geoJsonGeometry as GeoJsonPolygon<GeoJson2DGeographicCoordinates>).Coordinates.Exterior.Positions.Take(count - 1).Select(_ => new LngLat(_.Longitude, _.Latitude));
                         return points;
                     }
                 default:
