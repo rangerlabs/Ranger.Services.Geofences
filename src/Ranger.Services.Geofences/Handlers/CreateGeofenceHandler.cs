@@ -71,7 +71,7 @@ namespace Ranger.Services.Geofences
 
             try
             {
-                await repository.AddGeofence(geofence);
+                await repository.AddGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
             }
             catch (MongoWriteException ex)
             {
@@ -95,11 +95,6 @@ namespace Ranger.Services.Geofences
             var s2Loop = new S2Loop(latLngs.Select(_ => _.ToPoint()));
             s2Loop.Normalize();
             var s2Polygon = new S2Polygon(s2Loop);
-            // if (!s2PolygonBuilder.AssembleLoops(s2Loop, unusedEdges))
-            // {
-            //     logger.LogInformation($"Unused edges ({unusedEdges.Select(_ => $"{{{_.Start}, {_.End}}}")}) were found in the polygon LngLat coordinates ({String.Join(";", coordinates.Select(_ => $"{{{_.Lng}, {_.Lat}}}"))}).");
-            //     throw new RangerException("Invalid edges were found in the requested polygon coordinates.");
-            // }
             var s2AreaCentroid = s2Polygon.AreaAndCentroid;
             var area = s2AreaCentroid.Area * S2LatLng.EarthRadiusMeters * S2LatLng.EarthRadiusMeters;
             logger.LogInformation($"Computed the area of the polygon to be {area} and the centroid to be {s2AreaCentroid.Centroid.Value.ToDegreesString()}");

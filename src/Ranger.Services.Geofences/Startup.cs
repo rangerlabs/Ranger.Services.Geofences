@@ -2,6 +2,7 @@
 using System.Security.Cryptography.X509Certificates;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using JsonDiffPatchDotNet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -90,6 +91,7 @@ namespace Ranger.Services.Geofences
         {
             builder.AddRabbitMq();
             builder.AddMongo();
+            builder.RegisterInstance<JsonDiffPatch>(new JsonDiffPatch());
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)

@@ -2,29 +2,104 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JsonDiffPatchDotNet;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
+using Newtonsoft.Json;
 using Ranger.Common;
-using Ranger.Mongo;
 
 namespace Ranger.Services.Geofences.Data
 {
     public class GeofenceRepository : IGeofenceRepository
     {
         private readonly ILogger<GeofenceRepository> logger;
-        private readonly IMongoCollection<Geofence> collection;
+        private readonly IMongoCollection<Geofence> geofenceCollection;
+        private readonly IMongoCollection<GeofenceChangeLog> geofenceChangeLogCollection;
+        private readonly JsonDiffPatch jsonDiffPatch;
 
-        public GeofenceRepository(IMongoDatabase database, ILogger<GeofenceRepository> logger)
+        public GeofenceRepository(IMongoDatabase database, JsonDiffPatch jsonDiffPatch, ILogger<GeofenceRepository> logger)
         {
-            this.collection = database.GetCollection<Geofence>(CollectionNames.GeofenceCollection);
+            this.jsonDiffPatch = jsonDiffPatch;
+            this.geofenceCollection = database.GetCollection<Geofence>(CollectionNames.GeofenceCollection);
+            this.geofenceChangeLogCollection = database.GetCollection<GeofenceChangeLog>(CollectionNames.GeofenceChangeLogCollection);
             this.logger = logger;
         }
 
-        public async Task AddGeofence(Geofence geofence)
+        public async Task AddGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix)
         {
-            await collection.InsertOneAsync(geofence);
+            if (geofence is null)
+            {
+                throw new ArgumentNullException($"{nameof(geofence)} was null.");
+            }
+            if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
+            {
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+            }
+            await geofenceCollection.InsertOneAsync(geofence);
+            await insertCreatedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
+        }
+
+        public async Task UpsertGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix)
+        {
+            if (geofence is null)
+            {
+                throw new ArgumentNullException($"{nameof(geofence)} was null.");
+            }
+            if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
+            {
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+            }
+
+            await geofenceCollection.ReplaceOneAsync(
+                (_) => _.PgsqlDatabaseUsername == geofence.PgsqlDatabaseUsername && _.ProjectId == geofence.ProjectId && _.ExternalId == geofence.ExternalId,
+                geofence,
+                new ReplaceOptions { IsUpsert = true });
+            await insertUpsertedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
+        }
+
+        public async Task DeleteGeofence(string pgsqlDatabaseUsername, string projectId, string externalId, string commandingUserEmailOrTokenPrefix)
+        {
+            if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
+            {
+                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(projectId))
+            {
+                throw new ArgumentException($"{nameof(projectId)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(externalId))
+            {
+                throw new ArgumentException($"{nameof(externalId)} was null or whitespace.");
+            }
+            if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
+            {
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+            }
+
+            var geofence = await GetGeofenceAsync(pgsqlDatabaseUsername, projectId, externalId);
+
+            await geofenceCollection.DeleteOneAsync(
+                (_) => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername && _.ProjectId == projectId && _.ExternalId == externalId
+            );
+            await insertDeletedChangeLog(pgsqlDatabaseUsername, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
+        }
+
+        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, string projectId, string externalId)
+        {
+            return await geofenceCollection.Aggregate()
+                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.ExternalId == externalId)
+                .As<Geofence>()
+                .FirstOrDefaultAsync();
+
+        }
+
+        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, string projectId, Guid geofenceId)
+        {
+            return await geofenceCollection.Aggregate()
+                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.Id == geofenceId)
+                .As<Geofence>()
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<GeofenceResponseModel>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, string projectId)
@@ -34,32 +109,32 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
             }
 
-            var geofences = await collection.Aggregate()
-            .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId)
-            .Project("{_id:0,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
-            .Sort("{ExternalId:1}")
-            .As<Geofence>()
-            .ToListAsync();
+            var geofences = await geofenceCollection.Aggregate()
+                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId)
+                .Project("{_id:0,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
+                .Sort("{ExternalId:1}")
+                .As<Geofence>()
+                .ToListAsync();
 
             var geofenceResponse = geofences.Select(_ =>
-                new GeofenceResponseModel()
-                {
-                    Enabled = _.Enabled,
-                    Description = _.Description,
-                    ExpirationDate = _.ExpirationDate,
-                    ExternalId = _.ExternalId,
-                    Coordinates = getCoordinatesByShape(_.Shape, _.GeoJsonGeometry),
-                    IntegrationIds = _.IntegrationIds,
-                    Labels = _.Labels,
-                    LaunchDate = _.LaunchDate,
-                    Metadata = _.Metadata,
-                    OnEnter = _.OnEnter,
-                    OnExit = _.OnExit,
-                    ProjectId = _.ProjectId,
-                    Radius = _.Radius,
-                    Schedule = _.Schedule,
-                    Shape = _.Shape
-                }
+               new GeofenceResponseModel()
+               {
+                   Enabled = _.Enabled,
+                   Description = _.Description,
+                   ExpirationDate = _.ExpirationDate,
+                   ExternalId = _.ExternalId,
+                   Coordinates = getCoordinatesByShape(_.Shape, _.GeoJsonGeometry),
+                   IntegrationIds = _.IntegrationIds,
+                   Labels = _.Labels,
+                   LaunchDate = _.LaunchDate,
+                   Metadata = _.Metadata,
+                   OnEnter = _.OnEnter,
+                   OnExit = _.OnExit,
+                   ProjectId = _.ProjectId,
+                   Radius = _.Radius,
+                   Schedule = _.Schedule,
+                   Shape = _.Shape
+               }
             );
             return geofenceResponse;
         }
@@ -82,6 +157,40 @@ namespace Ranger.Services.Geofences.Data
                 default:
                     return new LngLat[0];
             }
+        }
+
+        private async Task insertDeletedChangeLog(string pgsqlDatabaseUsername, string projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
+        {
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), pgsqlDatabaseUsername);
+            changeLog.GeofenceId = geofenceId;
+            changeLog.projectId = projectId;
+            changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
+            changeLog.Event = "GeofenceDeleted";
+            await geofenceChangeLogCollection.InsertOneAsync(changeLog);
+        }
+
+        private async Task insertCreatedChangeLog(Geofence geofence, string commandingUserEmailOrTokenPrefix)
+        {
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), geofence.PgsqlDatabaseUsername);
+            changeLog.GeofenceId = geofence.Id;
+            changeLog.projectId = geofence.ProjectId;
+            changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
+            changeLog.Event = "GeofenceCreated";
+            changeLog.GeofenceDiff = JsonConvert.SerializeObject(geofence);
+            await geofenceChangeLogCollection.InsertOneAsync(changeLog);
+        }
+
+        private async Task insertUpsertedChangeLog(Geofence geofence, string commandingUserEmailOrTokenPrefix)
+        {
+            var currentGeofence = await this.GetGeofenceAsync(geofence.PgsqlDatabaseUsername, geofence.ProjectId, geofence.ExternalId);
+            var diff = this.jsonDiffPatch.Diff(JsonConvert.SerializeObject(currentGeofence), JsonConvert.SerializeObject(geofence));
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), geofence.PgsqlDatabaseUsername);
+            changeLog.GeofenceId = geofence.Id;
+            changeLog.projectId = geofence.ProjectId;
+            changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
+            changeLog.Event = "GeofenceUpserted";
+            changeLog.GeofenceDiff = diff;
+            await geofenceChangeLogCollection.InsertOneAsync(changeLog);
         }
     }
 }

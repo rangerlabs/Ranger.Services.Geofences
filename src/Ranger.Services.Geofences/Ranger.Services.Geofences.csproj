@@ -9,6 +9,7 @@
     <None Include="./Certs/*.pfx" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="jsondiffpatch.net" Version="2.1.0" />
     <PackageReference Include="Autofac" Version="4.9.4" />
     <PackageReference Include="IdentityServer4" Version="3.0.2" />
     <PackageReference Include="IdentityServer4.AspNetIdentity" Version="3.0.2" />
