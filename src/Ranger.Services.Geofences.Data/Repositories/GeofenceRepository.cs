@@ -51,11 +51,39 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
             }
 
-            await geofenceCollection.ReplaceOneAsync(
-                (_) => _.PgsqlDatabaseUsername == geofence.PgsqlDatabaseUsername && _.ProjectId == geofence.ProjectId && _.ExternalId == geofence.ExternalId,
-                geofence,
-                new ReplaceOptions { IsUpsert = true });
-            await insertUpsertedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
+            var currentGeofence = await this.GetGeofenceAsync(geofence.PgsqlDatabaseUsername, geofence.ProjectId, geofence.ExternalId);
+            if (currentGeofence is null)
+            {
+                await geofenceCollection.InsertOneAsync(geofence);
+            }
+            else
+            {
+                var updateGeofence = new Geofence(currentGeofence.Id, currentGeofence.PgsqlDatabaseUsername);
+                updateGeofence.ExternalId = geofence.ExternalId;
+                updateGeofence.ProjectId = geofence.ProjectId;
+                updateGeofence.Description = geofence.Description;
+                updateGeofence.Enabled = geofence.Enabled;
+                updateGeofence.ExpirationDate = geofence.ExpirationDate;
+                updateGeofence.GeoJsonGeometry = geofence.GeoJsonGeometry;
+                updateGeofence.PolygonCentroid = geofence.PolygonCentroid;
+                updateGeofence.Labels = geofence.Labels;
+                updateGeofence.IntegrationIds = geofence.IntegrationIds;
+                updateGeofence.LaunchDate = geofence.LaunchDate;
+                updateGeofence.Metadata = geofence.Metadata;
+                updateGeofence.OnEnter = geofence.OnEnter;
+                updateGeofence.OnExit = geofence.OnExit;
+                updateGeofence.Radius = geofence.Radius;
+                updateGeofence.Schedule = geofence.Schedule;
+                updateGeofence.Shape = geofence.Shape;
+                updateGeofence.TimeZoneId = "Americas/New_York";
+
+                await geofenceCollection.ReplaceOneAsync(
+                    (_) => _.PgsqlDatabaseUsername == geofence.PgsqlDatabaseUsername && _.ProjectId == geofence.ProjectId && _.ExternalId == geofence.ExternalId,
+                    updateGeofence
+                );
+
+            }
+            await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
         }
 
         public async Task DeleteGeofence(string pgsqlDatabaseUsername, string projectId, string externalId, string commandingUserEmailOrTokenPrefix)
@@ -163,7 +191,7 @@ namespace Ranger.Services.Geofences.Data
         {
             var changeLog = new GeofenceChangeLog(Guid.NewGuid(), pgsqlDatabaseUsername);
             changeLog.GeofenceId = geofenceId;
-            changeLog.projectId = projectId;
+            changeLog.ProjectId = projectId;
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
             changeLog.Event = "GeofenceDeleted";
             await geofenceChangeLogCollection.InsertOneAsync(changeLog);
@@ -173,23 +201,30 @@ namespace Ranger.Services.Geofences.Data
         {
             var changeLog = new GeofenceChangeLog(Guid.NewGuid(), geofence.PgsqlDatabaseUsername);
             changeLog.GeofenceId = geofence.Id;
-            changeLog.projectId = geofence.ProjectId;
+            changeLog.ProjectId = geofence.ProjectId;
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
             changeLog.Event = "GeofenceCreated";
             changeLog.GeofenceDiff = JsonConvert.SerializeObject(geofence);
             await geofenceChangeLogCollection.InsertOneAsync(changeLog);
         }
 
-        private async Task insertUpsertedChangeLog(Geofence geofence, string commandingUserEmailOrTokenPrefix)
+        private async Task insertUpsertedChangeLog(Geofence currentGeofence, Geofence updatedGeofence, string commandingUserEmailOrTokenPrefix)
         {
-            var currentGeofence = await this.GetGeofenceAsync(geofence.PgsqlDatabaseUsername, geofence.ProjectId, geofence.ExternalId);
-            var diff = this.jsonDiffPatch.Diff(JsonConvert.SerializeObject(currentGeofence), JsonConvert.SerializeObject(geofence));
-            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), geofence.PgsqlDatabaseUsername);
-            changeLog.GeofenceId = geofence.Id;
-            changeLog.projectId = geofence.ProjectId;
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), updatedGeofence.PgsqlDatabaseUsername);
+            if (currentGeofence != null)
+            {
+                var diff = this.jsonDiffPatch.Diff(JsonConvert.SerializeObject(currentGeofence), JsonConvert.SerializeObject(updatedGeofence));
+                changeLog.GeofenceDiff = diff;
+            }
+            else
+            {
+                changeLog.GeofenceDiff = JsonConvert.SerializeObject(updatedGeofence);
+
+            }
+            changeLog.GeofenceId = updatedGeofence.Id;
+            changeLog.ProjectId = updatedGeofence.ProjectId;
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
             changeLog.Event = "GeofenceUpserted";
-            changeLog.GeofenceDiff = diff;
             await geofenceChangeLogCollection.InsertOneAsync(changeLog);
         }
     }

@@ -57,7 +57,7 @@ namespace Ranger.Services.Geofences
             geofence.Enabled = command.Enabled;
             geofence.ExpirationDate = command.ExpirationDate;
             geofence.GeoJsonGeometry = GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates);
-            geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? getCentroid(command.Coordinates) : null;
+            geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? Utilities.GetPolygonCentroid(command.Coordinates) : null;
             geofence.Labels = command.Labels;
             geofence.IntegrationIds = command.IntegrationIds;
             geofence.LaunchDate = command.LaunchDate;
@@ -86,24 +86,6 @@ namespace Ranger.Services.Geofences
                 throw new RangerException("Failed to add geofence.", ex);
             }
             busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
-        }
-
-        private GeoJsonPoint<GeoJson2DGeographicCoordinates> getCentroid(IEnumerable<LngLat> coordinates)
-        {
-
-            var latLngs = coordinates.Reverse().Select(c => S2LatLng.FromDegrees(c.Lat, c.Lng));
-            var s2Loop = new S2Loop(latLngs.Select(_ => _.ToPoint()));
-            s2Loop.Normalize();
-            var s2Polygon = new S2Polygon(s2Loop);
-            var s2AreaCentroid = s2Polygon.AreaAndCentroid;
-            var area = s2AreaCentroid.Area * S2LatLng.EarthRadiusMeters * S2LatLng.EarthRadiusMeters;
-            logger.LogInformation($"Computed the area of the polygon to be {area} and the centroid to be {s2AreaCentroid.Centroid.Value.ToDegreesString()}");
-            if (area < 10000)
-            {
-                throw new RangerException("Polygon geofences must enclose an area greater than 10,000 meters.");
-            }
-            var centroid = new S2LatLng(s2Polygon.Centroid.Value);
-            return GeoJson.Point<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(centroid.LngDegrees, centroid.LatDegrees));
         }
     }
 }
