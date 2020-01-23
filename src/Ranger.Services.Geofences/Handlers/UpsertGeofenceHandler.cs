@@ -67,7 +67,8 @@ namespace Ranger.Services.Geofences
 
             try
             {
-                await repository.UpsertGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
+                var (wasCreated, id) = await repository.UpsertGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
+                busPublisher.Publish(new GeofenceUpserted(command.Domain, command.ExternalId, id), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (MongoWriteException ex)
             {
@@ -79,7 +80,6 @@ namespace Ranger.Services.Geofences
                 logger.LogError(ex, "Failed to upsert geofence");
                 throw new RangerException("Failed to upsert geofence.", ex);
             }
-            busPublisher.Publish(new GeofenceUpserted(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
         }
     }
 }

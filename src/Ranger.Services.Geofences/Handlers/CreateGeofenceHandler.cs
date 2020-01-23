@@ -72,6 +72,7 @@ namespace Ranger.Services.Geofences
             try
             {
                 await repository.AddGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
+                busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId, geofence.Id.ToString()), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (MongoWriteException ex)
             {
@@ -85,7 +86,6 @@ namespace Ranger.Services.Geofences
             {
                 throw new RangerException("Failed to add geofence.", ex);
             }
-            busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
         }
     }
 }
