@@ -7,10 +7,14 @@ using Ranger.RabbitMQ;
 namespace Ranger.Services.Geofences
 {
     [MessageNamespaceAttribute("geofences")]
-    public class UpsertGeofence : ICommand
+    public class UpdateGeofence : ICommand
     {
-        public UpsertGeofence(string commandingUserEmailOrTokenPrefix, string domain, string externalId, string projectId, GeofenceShapeEnum shape, IEnumerable<LngLat> coordinates, IEnumerable<string> labels = null, IEnumerable<string> integrationIds = null, IDictionary<string, object> metadata = null, string description = null, int radius = 0, bool enabled = true, bool onEnter = true, bool onExit = true, DateTime? expirationDate = null, DateTime? launchDate = null, Schedule schedule = null)
+        public UpdateGeofence(string commandingUserEmailOrTokenPrefix, string domain, string id, string externalId, string projectId, GeofenceShapeEnum shape, IEnumerable<LngLat> coordinates, IEnumerable<string> labels = null, IEnumerable<string> integrationIds = null, IDictionary<string, object> metadata = null, string description = null, int radius = 0, bool enabled = true, bool onEnter = true, bool onExit = true, DateTime? expirationDate = null, DateTime? launchDate = null, Schedule schedule = null)
         {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new System.ArgumentException($"{nameof(id)} was null or whitespace.");
+            }
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
                 throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
@@ -43,6 +47,7 @@ namespace Ranger.Services.Geofences
             this.Radius = radius;
 
             this.Domain = domain;
+            this.Id = id;
             this.ExternalId = externalId;
             this.ProjectId = projectId;
             this.Labels = labels ?? new List<string>();
@@ -59,6 +64,7 @@ namespace Ranger.Services.Geofences
 
         public string CommandingUserEmailOrTokenPrefix { get; }
         public string Domain { get; }
+        public string Id { get; }
         public string ExternalId { get; }
         public string ProjectId { get; }
         public IEnumerable<string> Labels { get; }

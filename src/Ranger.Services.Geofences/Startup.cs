@@ -114,8 +114,8 @@ namespace Ranger.Services.Geofences
                 .SubscribeCommand<CreateGeofence>((c, e) =>
                     new CreateGeofenceRejected(e.Message, "")
                 )
-                .SubscribeCommand<UpsertGeofence>((c, e) =>
-                    new UpsertGeofenceRejected(e.Message, "")
+                .SubscribeCommand<UpdateGeofence>((c, e) =>
+                    new UpdateGeofenceRejected(e.Message, "")
                 )
                 .SubscribeCommand<DeleteGeofence>((c, e) =>
                     new DeleteGeofenceRejected(e.Message, "")

@@ -10,14 +10,14 @@ using Ranger.Services.Geofences.Data;
 
 namespace Ranger.Services.Geofences
 {
-    public class UpsertGeofenceHandler : ICommandHandler<UpsertGeofence>
+    public class UpdateGeofenceHandler : ICommandHandler<UpdateGeofence>
     {
         private readonly IBusPublisher busPublisher;
         private readonly IGeofenceRepository repository;
         private readonly ITenantsClient tenantsClient;
-        private readonly ILogger<UpsertGeofenceHandler> logger;
+        private readonly ILogger<UpdateGeofenceHandler> logger;
 
-        public UpsertGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, ITenantsClient tenantsClient, ILogger<UpsertGeofenceHandler> logger)
+        public UpdateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, ITenantsClient tenantsClient, ILogger<UpdateGeofenceHandler> logger)
         {
             this.tenantsClient = tenantsClient;
             this.logger = logger;
@@ -25,7 +25,7 @@ namespace Ranger.Services.Geofences
             this.repository = repository;
         }
 
-        public async Task HandleAsync(UpsertGeofence command, ICorrelationContext context)
+        public async Task HandleAsync(UpdateGeofence command, ICorrelationContext context)
         {
             ContextTenant tenant = null;
             try
@@ -45,8 +45,17 @@ namespace Ranger.Services.Geofences
                 throw;
             }
 
+            Guid id;
+            try
+            {
+                id = Guid.Parse(command.Id);
+            }
+            catch (Exception)
+            {
+                throw new RangerException($"The provided Id '{command.Id}' was not a valid Guid.");
+            }
 
-            var geofence = new Geofence(Guid.NewGuid(), tenant.DatabaseUsername);
+            var geofence = new Geofence(id, tenant.DatabaseUsername);
             geofence.ExternalId = command.ExternalId;
             geofence.ProjectId = command.ProjectId;
             geofence.Description = command.Description;
@@ -67,18 +76,22 @@ namespace Ranger.Services.Geofences
 
             try
             {
-                var (wasCreated, id) = await repository.UpsertGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
-                busPublisher.Publish(new GeofenceUpserted(command.Domain, command.ExternalId, id), CorrelationContext.FromId(context.CorrelationContextId));
+                await repository.UpdateGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
+                busPublisher.Publish(new GeofenceUpdated(command.Domain, command.ExternalId, command.Id), CorrelationContext.FromId(context.CorrelationContextId));
+            }
+            catch (RangerException)
+            {
+                throw;
             }
             catch (MongoWriteException ex)
             {
                 logger.LogError(ex, "Failed to upsert geofence");
-                throw new RangerException("Failed to upsert geofence.", ex);
+                throw new RangerException("An unspecified error occurred.", ex);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to upsert geofence");
-                throw new RangerException("Failed to upsert geofence.", ex);
+                throw new RangerException("An unspecified error occurred.", ex);
             }
         }
     }

@@ -48,18 +48,22 @@ namespace Ranger.Services.Geofences
             try
             {
                 await repository.DeleteGeofence(tenant.DatabaseUsername, command.ProjectId, command.ExternalId, command.CommandingUserEmailOrTokenPrefix);
+                busPublisher.Publish(new GeofenceDeleted(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
+            }
+            catch (RangerException)
+            {
+                throw;
             }
             catch (MongoException ex)
             {
                 logger.LogError(ex, "Failed to delete geofence");
-                throw new RangerException("Failed to delete geofence.", ex);
+                throw new RangerException("An unspecified error occurred.", ex);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to delete geofence");
-                throw new RangerException("Failed to delete geofence.", ex);
+                throw new RangerException("An unspecified error occurred.", ex);
             }
-            busPublisher.Publish(new GeofenceDeleted(command.Domain, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
         }
     }
 }

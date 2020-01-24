@@ -40,7 +40,7 @@ namespace Ranger.Services.Geofences.Data
             await insertCreatedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
         }
 
-        public async Task<(bool wasCreated, string id)> UpsertGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix)
+        public async Task UpdateGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix)
         {
             if (geofence is null)
             {
@@ -51,44 +51,19 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
             }
 
-            bool wasCreated = false;
-            string id = "";
-            var currentGeofence = await this.GetGeofenceAsync(geofence.PgsqlDatabaseUsername, geofence.ProjectId, geofence.ExternalId);
+            var currentGeofence = await this.GetGeofenceAsync(geofence.PgsqlDatabaseUsername, geofence.ProjectId, geofence.Id);
             if (currentGeofence is null)
             {
-                await geofenceCollection.InsertOneAsync(geofence);
-                wasCreated = true;
-                id = geofence.Id.ToString();
+                throw new RangerException($"A geofence could not be found for the provided Id '{geofence.Id}'.");
             }
-            else
-            {
-                var updatedGeofence = new Geofence(currentGeofence.Id, currentGeofence.PgsqlDatabaseUsername);
-                updatedGeofence.ExternalId = geofence.ExternalId;
-                updatedGeofence.ProjectId = geofence.ProjectId;
-                updatedGeofence.Description = geofence.Description;
-                updatedGeofence.Enabled = geofence.Enabled;
-                updatedGeofence.ExpirationDate = geofence.ExpirationDate;
-                updatedGeofence.GeoJsonGeometry = geofence.GeoJsonGeometry;
-                updatedGeofence.PolygonCentroid = geofence.PolygonCentroid;
-                updatedGeofence.Labels = geofence.Labels;
-                updatedGeofence.IntegrationIds = geofence.IntegrationIds;
-                updatedGeofence.LaunchDate = geofence.LaunchDate;
-                updatedGeofence.Metadata = geofence.Metadata;
-                updatedGeofence.OnEnter = geofence.OnEnter;
-                updatedGeofence.OnExit = geofence.OnExit;
-                updatedGeofence.Radius = geofence.Radius;
-                updatedGeofence.Schedule = geofence.Schedule;
-                updatedGeofence.Shape = geofence.Shape;
-                updatedGeofence.TimeZoneId = "Americas/New_York";
 
-                await geofenceCollection.ReplaceOneAsync(
-                    (_) => _.PgsqlDatabaseUsername == geofence.PgsqlDatabaseUsername && _.ProjectId == geofence.ProjectId && _.ExternalId == geofence.ExternalId,
-                    updatedGeofence
-                );
-                id = updatedGeofence.Id.ToString();
-            }
+            await geofenceCollection.ReplaceOneAsync(
+                (_) => _.PgsqlDatabaseUsername == geofence.PgsqlDatabaseUsername && _.ProjectId == geofence.ProjectId && _.Id == geofence.Id,
+                geofence
+            );
+
             await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
-            return (wasCreated, id);
+            return;
         }
 
         public async Task DeleteGeofence(string pgsqlDatabaseUsername, string projectId, string externalId, string commandingUserEmailOrTokenPrefix)
@@ -111,6 +86,11 @@ namespace Ranger.Services.Geofences.Data
             }
 
             var geofence = await GetGeofenceAsync(pgsqlDatabaseUsername, projectId, externalId);
+
+            if (geofence is null)
+            {
+                throw new RangerException($"A geofence could not be found for the provided externalId '{externalId}'.");
+            }
 
             await geofenceCollection.DeleteOneAsync(
                 (_) => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername && _.ProjectId == projectId && _.ExternalId == externalId

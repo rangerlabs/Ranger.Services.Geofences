@@ -3,13 +3,13 @@ using Ranger.RabbitMQ;
 namespace Ranger.Services.Geofences
 {
     [MessageNamespaceAttribute("geofences")]
-    public class GeofenceUpserted : IEvent
+    public class GeofenceUpdated : IEvent
     {
         public string Domain { get; }
         public string ExternalId { get; }
         public string Id { get; }
 
-        public GeofenceUpserted(string domain, string externalId, string id)
+        public GeofenceUpdated(string domain, string externalId, string id)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {

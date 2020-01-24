@@ -74,17 +74,21 @@ namespace Ranger.Services.Geofences
                 await repository.AddGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
                 busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId, geofence.Id.ToString()), CorrelationContext.FromId(context.CorrelationContextId));
             }
+            catch (RangerException)
+            {
+                throw;
+            }
             catch (MongoWriteException ex)
             {
                 if (ex.WriteError != null && ex.WriteError.Code == 11000)
                 {
                     throw new RangerException($"A geofence with the ExternalId '{command.ExternalId}' already exists.", ex);
                 }
-                throw new RangerException("Failed to add geofence.", ex);
+                throw new RangerException("An unspecified error occurred.", ex);
             }
             catch (Exception ex)
             {
-                throw new RangerException("Failed to add geofence.", ex);
+                throw new RangerException("An unspecified error occurred.", ex);
             }
         }
     }
