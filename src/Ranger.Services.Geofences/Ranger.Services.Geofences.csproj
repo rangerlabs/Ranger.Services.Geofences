@@ -9,6 +9,7 @@
     <None Include="./Certs/*.pfx" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="jsondiffpatch.net" Version="2.1.0" />
     <PackageReference Include="Autofac" Version="4.9.4" />
     <PackageReference Include="IdentityServer4" Version="3.0.2" />
     <PackageReference Include="IdentityServer4.AspNetIdentity" Version="3.0.2" />
@@ -21,7 +22,8 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Ranger.Monitoring" Version="2.0.1" />
     <PackageReference Include="Ranger.RabbitMQ" Version="2.0.0" />
-    <PackageReference Include="Ranger.Mongo" Version="2.0.1" />
+    <PackageReference Include="Ranger.InternalHttpClient" Version="2.0.22" />
+    <PackageReference Include="S2Geometry" Version="1.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Geofences.Data\Ranger.Services.Geofences.Data.csproj" />

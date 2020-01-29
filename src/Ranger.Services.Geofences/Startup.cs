@@ -2,6 +2,7 @@
 using System.Security.Cryptography.X509Certificates;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using JsonDiffPatchDotNet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using Ranger.Common;
+using Ranger.InternalHttpClient;
 using Ranger.Mongo;
 using Ranger.RabbitMQ;
 using Ranger.Services.Geofences.Data;
@@ -53,6 +55,11 @@ namespace Ranger.Services.Geofences
                     });
             });
 
+            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
+            {
+                return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
+            });
+
             services.AddEntityFrameworkNpgsql().AddDbContext<GeofencesDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
@@ -62,6 +69,8 @@ namespace Ranger.Services.Geofences
 
             services.AddTransient<IGeofencesDbContextInitializer, GeofencesDbContextInitializer>();
             services.AddTransient<ILoginRoleRepository<GeofencesDbContext>, LoginRoleRepository<GeofencesDbContext>>();
+            services.AddTransient<IGeofenceRepository, GeofenceRepository>();
+            services.AddSingleton<IMongoDbSeeder, GeofenceSeeder>();
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
@@ -80,13 +89,15 @@ namespace Ranger.Services.Geofences
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            builder.AddRabbitMq(loggerFactory);
+            builder.AddRabbitMq();
             builder.AddMongo();
+            builder.RegisterInstance<JsonDiffPatch>(new JsonDiffPatch());
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
+            var logger = loggerFactory.CreateLogger<Startup>();
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
             app.UseRouting();
@@ -99,12 +110,33 @@ namespace Ranger.Services.Geofences
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
+                )
+                .SubscribeCommand<CreateGeofence>((c, e) =>
+                    new CreateGeofenceRejected(e.Message, "")
+                )
+                .SubscribeCommand<UpdateGeofence>((c, e) =>
+                    new UpdateGeofenceRejected(e.Message, "")
+                )
+                .SubscribeCommand<DeleteGeofence>((c, e) =>
+                    new DeleteGeofenceRejected(e.Message, "")
                 );
+            ;
+
+
+            this.InitializeMongoDb(app, logger);
         }
 
         private void OnShutdown()
         {
             this.busSubscriber.Dispose();
+        }
+
+        private void InitializeMongoDb(IApplicationBuilder app, ILogger<Startup> logger)
+        {
+            logger.LogInformation("Initializing MongoDB.");
+            var mongoInitializer = app.ApplicationServices.GetService<IMongoDbInitializer>();
+            mongoInitializer.Initialize();
+            logger.LogInformation("MongoDB Initialized.");
         }
     }
 }
