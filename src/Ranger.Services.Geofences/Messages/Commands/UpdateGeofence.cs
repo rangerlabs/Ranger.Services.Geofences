@@ -9,12 +9,8 @@ namespace Ranger.Services.Geofences
     [MessageNamespaceAttribute("geofences")]
     public class UpdateGeofence : ICommand
     {
-        public UpdateGeofence(string commandingUserEmailOrTokenPrefix, string domain, string id, string externalId, string projectId, GeofenceShapeEnum shape, IEnumerable<LngLat> coordinates, IEnumerable<string> labels = null, IEnumerable<string> integrationIds = null, IDictionary<string, object> metadata = null, string description = null, int radius = 0, bool enabled = true, bool onEnter = true, bool onExit = true, DateTime? expirationDate = null, DateTime? launchDate = null, Schedule schedule = null)
+        public UpdateGeofence(string commandingUserEmailOrTokenPrefix, string domain, Guid id, string externalId, Guid projectId, GeofenceShapeEnum shape, IEnumerable<LngLat> coordinates, IEnumerable<string> labels = null, IEnumerable<string> integrationIds = null, IDictionary<string, object> metadata = null, string description = null, int radius = 0, bool enabled = true, bool onEnter = true, bool onExit = true, DateTime? expirationDate = null, DateTime? launchDate = null, Schedule schedule = null)
         {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                throw new System.ArgumentException($"{nameof(id)} was null or whitespace.");
-            }
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
                 throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
@@ -27,10 +23,7 @@ namespace Ranger.Services.Geofences
             {
                 throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
             }
-            if (string.IsNullOrWhiteSpace(projectId))
-            {
-                throw new System.ArgumentException($"{nameof(projectId)} was null or whitespace.");
-            }
+
             if (coordinates is null)
             {
                 throw new System.ArgumentException($"{nameof(coordinates)} was null.");
@@ -64,9 +57,9 @@ namespace Ranger.Services.Geofences
 
         public string CommandingUserEmailOrTokenPrefix { get; }
         public string Domain { get; }
-        public string Id { get; }
+        public Guid Id { get; }
         public string ExternalId { get; }
-        public string ProjectId { get; }
+        public Guid ProjectId { get; }
         public IEnumerable<string> Labels { get; }
         public bool OnEnter { get; } = true;
         public bool OnExit { get; } = true;

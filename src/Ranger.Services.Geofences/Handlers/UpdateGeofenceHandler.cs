@@ -44,18 +44,7 @@ namespace Ranger.Services.Geofences
                 this.logger.LogError(ex, "An exception occurred retrieving the ContextTenant object. Cannot construct the tenant specific repository.");
                 throw;
             }
-
-            Guid id;
-            try
-            {
-                id = Guid.Parse(command.Id);
-            }
-            catch (Exception)
-            {
-                throw new RangerException($"The provided Id '{command.Id}' was not a valid Guid.");
-            }
-
-            var geofence = new Geofence(id, tenant.DatabaseUsername);
+            var geofence = new Geofence(command.Id, tenant.DatabaseUsername);
             geofence.ExternalId = command.ExternalId;
             geofence.ProjectId = command.ProjectId;
             geofence.Description = command.Description;

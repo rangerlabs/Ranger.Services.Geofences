@@ -24,13 +24,8 @@ namespace Ranger.Services.Geofences.Controllers
         }
 
         [HttpGet("/{domain}/geofences")]
-        public async Task<IActionResult> GetAllGeofences([FromRoute] string domain, [FromQuery] string projectId)
+        public async Task<IActionResult> GetAllGeofences([FromRoute] string domain, [FromQuery] Guid projectId)
         {
-            if (string.IsNullOrWhiteSpace(projectId))
-            {
-                return BadRequest($"{nameof(projectId)} is a required parameter.");
-            }
-
             ContextTenant tenant = null;
             try
             {

@@ -12,7 +12,7 @@ namespace Ranger.Services.Geofences.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     friendly_name = table.Column<string>(nullable: true),
                     xml = table.Column<string>(nullable: true)
                 },

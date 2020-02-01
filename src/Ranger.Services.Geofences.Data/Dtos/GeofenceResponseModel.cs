@@ -8,13 +8,13 @@ namespace Ranger.Services.Geofences.Data
 {
     public class GeofenceResponseModel
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         public GeofenceShapeEnum Shape { get; set; }
         public IEnumerable<LngLat> Coordinates { get; set; }
         public int Radius { get; set; }
 
         public string ExternalId { get; set; }
-        public string ProjectId { get; set; }
+        public Guid ProjectId { get; set; }
         public string Description { get; set; }
         public IEnumerable<string> Labels { get; set; }
         public IEnumerable<string> IntegrationIds { get; set; }

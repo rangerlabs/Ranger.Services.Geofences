@@ -108,9 +108,6 @@ namespace Ranger.Services.Geofences
             });
 
             this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<InitializeTenant>((c, e) =>
-                   new InitializeTenantRejected(e.Message, "")
-                )
                 .SubscribeCommand<CreateGeofence>((c, e) =>
                     new CreateGeofenceRejected(e.Message, "")
                 )

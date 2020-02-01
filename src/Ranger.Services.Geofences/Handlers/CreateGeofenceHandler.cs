@@ -72,7 +72,7 @@ namespace Ranger.Services.Geofences
             try
             {
                 await repository.AddGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
-                busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId, geofence.Id.ToString()), CorrelationContext.FromId(context.CorrelationContextId));
+                busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId, geofence.Id), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (RangerException)
             {
