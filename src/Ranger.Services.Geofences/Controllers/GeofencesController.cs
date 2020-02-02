@@ -10,13 +10,13 @@ using Ranger.Services.Geofences.Data;
 namespace Ranger.Services.Geofences.Controllers
 {
     [ApiController]
-    public class GeofenceController : ControllerBase
+    public class GeofencesController : ControllerBase
     {
         private readonly IGeofenceRepository geofenceRepository;
         private readonly ITenantsClient tenantsClient;
-        private readonly ILogger<GeofenceController> logger;
+        private readonly ILogger<GeofencesController> logger;
 
-        public GeofenceController(IGeofenceRepository geofenceRepository, ITenantsClient tenantsClient, ILogger<GeofenceController> logger)
+        public GeofencesController(IGeofenceRepository geofenceRepository, ITenantsClient tenantsClient, ILogger<GeofencesController> logger)
         {
             this.geofenceRepository = geofenceRepository;
             this.tenantsClient = tenantsClient;
