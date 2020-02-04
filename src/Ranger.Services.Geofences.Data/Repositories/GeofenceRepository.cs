@@ -66,15 +66,11 @@ namespace Ranger.Services.Geofences.Data
             return;
         }
 
-        public async Task DeleteGeofence(string pgsqlDatabaseUsername, string projectId, string externalId, string commandingUserEmailOrTokenPrefix)
+        public async Task DeleteGeofence(string pgsqlDatabaseUsername, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix)
         {
             if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
             {
                 throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
-            }
-            if (string.IsNullOrWhiteSpace(projectId))
-            {
-                throw new ArgumentException($"{nameof(projectId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
@@ -98,7 +94,7 @@ namespace Ranger.Services.Geofences.Data
             await insertDeletedChangeLog(pgsqlDatabaseUsername, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, string projectId, string externalId)
+        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, Guid projectId, string externalId)
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.ExternalId == externalId)
@@ -107,7 +103,7 @@ namespace Ranger.Services.Geofences.Data
 
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, string projectId, Guid geofenceId)
+        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, Guid projectId, Guid geofenceId)
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.Id == geofenceId)
@@ -115,7 +111,7 @@ namespace Ranger.Services.Geofences.Data
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<GeofenceResponseModel>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, string projectId)
+        public async Task<IEnumerable<GeofenceResponseModel>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, Guid projectId)
         {
             if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
             {
@@ -132,7 +128,7 @@ namespace Ranger.Services.Geofences.Data
             var geofenceResponse = geofences.Select(_ =>
                new GeofenceResponseModel()
                {
-                   Id = _.Id.ToString(),
+                   Id = _.Id,
                    Enabled = _.Enabled,
                    Description = _.Description,
                    ExpirationDate = _.ExpirationDate,
@@ -173,7 +169,7 @@ namespace Ranger.Services.Geofences.Data
             }
         }
 
-        private async Task insertDeletedChangeLog(string pgsqlDatabaseUsername, string projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
+        private async Task insertDeletedChangeLog(string pgsqlDatabaseUsername, Guid projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
         {
             var changeLog = new GeofenceChangeLog(Guid.NewGuid(), pgsqlDatabaseUsername);
             changeLog.GeofenceId = geofenceId;

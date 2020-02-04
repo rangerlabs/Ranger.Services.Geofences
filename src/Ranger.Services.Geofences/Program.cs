@@ -29,7 +29,6 @@ namespace Ranger.Services.Geofences
                 var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
                 dbInitializer.Migrate();
-                dbInitializer.EnsureRowLevelSecurityApplied();
             }
             host.Run();
         }

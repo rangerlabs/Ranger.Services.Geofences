@@ -1,3 +1,4 @@
+using System;
 using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Geofences
@@ -7,9 +8,9 @@ namespace Ranger.Services.Geofences
     {
         public string Domain { get; }
         public string ExternalId { get; }
-        public string Id { get; }
+        public Guid Id { get; }
 
-        public GeofenceUpdated(string domain, string externalId, string id)
+        public GeofenceUpdated(string domain, string externalId, Guid id)
         {
             if (string.IsNullOrWhiteSpace(domain))
             {
@@ -18,10 +19,6 @@ namespace Ranger.Services.Geofences
             if (string.IsNullOrWhiteSpace(externalId))
             {
                 throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
-            }
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                throw new System.ArgumentException($"{nameof(id)} was null or whitespace.");
             }
 
             this.Domain = domain;

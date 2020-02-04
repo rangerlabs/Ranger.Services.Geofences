@@ -9,7 +9,7 @@ namespace Ranger.Services.Geofences.Data
         { }
 
         public Guid GeofenceId { get; set; }
-        public string ProjectId { get; set; }
+        public Guid ProjectId { get; set; }
         public string CommandingUserEmailOrTokenPrefix { get; set; }
         public string GeofenceDiff { get; set; }
         public string Event { get; set; }

@@ -9,7 +9,7 @@ namespace Ranger.Services.Geofences
     [MessageNamespaceAttribute("geofences")]
     public class DeleteGeofence : ICommand
     {
-        public DeleteGeofence(string commandingUserEmailOrTokenPrefix, string domain, string externalId, string projectId)
+        public DeleteGeofence(string commandingUserEmailOrTokenPrefix, string domain, string externalId, Guid projectId)
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
@@ -23,10 +23,7 @@ namespace Ranger.Services.Geofences
             {
                 throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
             }
-            if (string.IsNullOrWhiteSpace(projectId))
-            {
-                throw new System.ArgumentException($"{nameof(projectId)} was null or whitespace.");
-            }
+
             this.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
 
             this.Domain = domain;
@@ -37,6 +34,6 @@ namespace Ranger.Services.Geofences
         public string CommandingUserEmailOrTokenPrefix { get; }
         public string Domain { get; }
         public string ExternalId { get; }
-        public string ProjectId { get; }
+        public Guid ProjectId { get; }
     }
 }

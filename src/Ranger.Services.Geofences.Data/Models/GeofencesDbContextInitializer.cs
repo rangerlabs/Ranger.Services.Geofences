@@ -23,22 +23,11 @@ namespace Ranger.Services.Geofences.Data
         {
             context.Database.Migrate();
         }
-
-        public async Task EnsureRowLevelSecurityApplied()
-        {
-            var tables = Enum.GetNames(typeof(RowLevelSecureTablesEnum));
-            var loginRoleRepository = new LoginRoleRepository<GeofencesDbContext>(context);
-            foreach (var table in tables)
-            {
-                await loginRoleRepository.CreateTenantRlsPolicy(table);
-            }
-        }
     }
 
     public interface IGeofencesDbContextInitializer
     {
         bool EnsureCreated();
         void Migrate();
-        Task EnsureRowLevelSecurityApplied();
     }
 }
