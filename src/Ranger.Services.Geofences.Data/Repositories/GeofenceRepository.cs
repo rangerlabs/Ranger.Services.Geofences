@@ -125,27 +125,30 @@ namespace Ranger.Services.Geofences.Data
                 .As<Geofence>()
                 .ToListAsync();
 
-            var geofenceResponse = geofences.Select(_ =>
-               new GeofenceResponseModel()
-               {
-                   Id = _.Id,
-                   Enabled = _.Enabled,
-                   Description = _.Description,
-                   ExpirationDate = _.ExpirationDate,
-                   ExternalId = _.ExternalId,
-                   Coordinates = getCoordinatesByShape(_.Shape, _.GeoJsonGeometry),
-                   IntegrationIds = _.IntegrationIds,
-                   Labels = _.Labels,
-                   LaunchDate = _.LaunchDate,
-                   Metadata = _.Metadata,
-                   OnEnter = _.OnEnter,
-                   OnExit = _.OnExit,
-                   ProjectId = _.ProjectId,
-                   Radius = _.Radius,
-                   Schedule = _.Schedule,
-                   Shape = _.Shape
-               }
-            );
+            var geofenceResponse = new List<GeofenceResponseModel>();
+            foreach (var geofence in geofences)
+            {
+                geofenceResponse.Add(new GeofenceResponseModel
+                {
+                    Id = geofence.Id,
+                    Enabled = geofence.Enabled,
+                    Description = geofence.Description,
+                    ExpirationDate = geofence.ExpirationDate,
+                    ExternalId = geofence.ExternalId,
+                    Coordinates = getCoordinatesByShape(geofence.Shape, geofence.GeoJsonGeometry),
+                    IntegrationIds = geofence.IntegrationIds,
+                    Labels = geofence.Labels,
+                    LaunchDate = geofence.LaunchDate,
+                    Metadata = geofence.Metadata,
+                    OnEnter = geofence.OnEnter,
+                    OnExit = geofence.OnExit,
+                    ProjectId = geofence.ProjectId,
+                    Radius = geofence.Radius,
+                    Schedule = geofence.Schedule,
+                    Shape = geofence.Shape
+                });
+            }
+
             return geofenceResponse;
         }
 
