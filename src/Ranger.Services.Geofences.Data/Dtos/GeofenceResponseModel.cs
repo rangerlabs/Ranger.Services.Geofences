@@ -18,7 +18,7 @@ namespace Ranger.Services.Geofences.Data
         public string Description { get; set; }
         public IEnumerable<string> Labels { get; set; }
         public IEnumerable<string> IntegrationIds { get; set; }
-        public IDictionary<string, object> Metadata { get; set; }
+        public IDictionary<string, string> Metadata { get; set; }
         public bool OnEnter { get; set; } = true;
         public bool OnExit { get; set; } = true;
         public bool Enabled { get; set; } = true;
