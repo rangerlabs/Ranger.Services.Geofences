@@ -17,7 +17,7 @@ namespace Ranger.Services.Geofences
             IEnumerable<LngLat> coordinates,
             IEnumerable<string> labels = null,
             IEnumerable<string> integrationIds = null,
-            IDictionary<string, string> metadata = null,
+            IEnumerable<KeyValuePair<string, string>> metadata = null,
             string description = null,
             int radius = 0,
             bool enabled = true,
@@ -60,7 +60,7 @@ namespace Ranger.Services.Geofences
             this.ProjectId = projectId;
             this.Labels = labels ?? new List<string>();
             this.IntegrationIds = integrationIds ?? new List<string>();
-            this.Metadata = metadata ?? new Dictionary<string, string>();
+            this.Metadata = metadata ?? new List<KeyValuePair<string, string>>();
             this.Description = string.IsNullOrWhiteSpace(description) ? "" : description;
             this.ExpirationDate = expirationDate ?? DateTime.MaxValue;
             this.LaunchDate = launchDate ?? DateTime.UtcNow;
@@ -82,7 +82,7 @@ namespace Ranger.Services.Geofences
         public IEnumerable<string> IntegrationIds { get; }
         public IEnumerable<LngLat> Coordinates { get; }
         public int Radius { get; }
-        public IDictionary<string, string> Metadata { get; }
+        public IEnumerable<KeyValuePair<string, string>> Metadata { get; }
         public GeofenceShapeEnum Shape { get; }
         public DateTime ExpirationDate { get; }
         public DateTime LaunchDate { get; }
