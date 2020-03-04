@@ -116,7 +116,8 @@ namespace Ranger.Services.Geofences
                 )
                 .SubscribeCommand<DeleteGeofence>((c, e) =>
                     new DeleteGeofenceRejected(e.Message, "")
-                );
+                )
+                .SubscribeCommand<ComputeGeofenceIntersections>();
             ;
 
 

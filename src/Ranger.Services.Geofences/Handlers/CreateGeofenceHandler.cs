@@ -74,10 +74,6 @@ namespace Ranger.Services.Geofences
                 await repository.AddGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
                 busPublisher.Publish(new GeofenceCreated(command.Domain, command.ExternalId, geofence.Id), CorrelationContext.FromId(context.CorrelationContextId));
             }
-            catch (RangerException)
-            {
-                throw;
-            }
             catch (MongoWriteException ex)
             {
                 if (ex.WriteError != null && ex.WriteError.Code == 11000)

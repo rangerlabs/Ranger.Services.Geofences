@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JsonDiffPatchDotNet;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 using Newtonsoft.Json;
@@ -13,6 +14,12 @@ namespace Ranger.Services.Geofences.Data
 {
     public class GeofenceRepository : IGeofenceRepository
     {
+        private class Union
+        {
+            public IEnumerable<Geofence> CircularMatches { get; set; }
+            public IEnumerable<Geofence> PolygonMatches { get; set; }
+        }
+
         private readonly ILogger<GeofenceRepository> logger;
         private readonly IMongoCollection<Geofence> geofenceCollection;
         private readonly IMongoCollection<GeofenceChangeLog> geofenceChangeLogCollection;
@@ -109,6 +116,148 @@ namespace Ranger.Services.Geofences.Data
                 .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.Id == geofenceId)
                 .As<Geofence>()
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<GeofenceResponseModel>> GetGeofencesContainingLocation(string pgsqlDatabaseUsername, Guid projectId, LngLat lngLat, double accuracy)
+        {
+            var circularLookup = new BsonDocument{
+                {"$lookup", new BsonDocument{
+                    {"from", "geofences"},
+                    {"let", new BsonDocument{}},
+                    {"pipeline", GetCircularSubPipeline(pgsqlDatabaseUsername, lngLat)},
+                    {"as", "CircularMatches"}
+                }}
+            };
+            var polygonLookup = new BsonDocument{
+                {"$lookup", new BsonDocument{
+                    {"from", "geofences"},
+                    {"let", new BsonDocument{}},
+                    {"pipeline", GetPolygonSubPipeline(pgsqlDatabaseUsername, lngLat)},
+                    {"as", "PolygonMatches"}
+                }}
+            };
+
+            var intersectingGeofences = await geofenceCollection.Aggregate()
+                .Limit(1)
+                .Project("{_id:1}")
+                .Project("{_id:0}")
+                .AppendStage<Union>(circularLookup)
+                .AppendStage<Union>(polygonLookup)
+                .Project(new BsonDocument{
+                    {"Union", new BsonDocument{
+                        {"$concatArrays", new BsonArray{"$CircularMatches", "$PolygonMatches"}}
+                    }}
+                })
+                .Unwind(x => x["Union"])
+                .ReplaceRoot<Geofence>("$Union")
+                .ToListAsync();
+
+            return default;
+        }
+
+        private static BsonArray GetCircularSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat)
+        {
+            // https://stackoverflow.com/questions/46090741/how-to-write-union-queries-in-mongodb
+            var circularSubPipeline = new BsonArray();
+            circularSubPipeline.Add(
+                new BsonDocument{
+                    {"$geoNear", new BsonDocument{
+                        {"near", new BsonDocument{
+                            {"type", "Point"},
+                            {"coordinates", new BsonArray { lngLat.Lng, lngLat.Lat }}
+                        }},
+                        {"distanceField", "dist.calculated"},
+                        {"maxDistance", 10000},
+                        {"query", new BsonDocument{
+                            {"Shape", 0}
+                        }},
+                        {"spherical", true}
+                    }}});
+            circularSubPipeline.Add(
+                new BsonDocument{
+                    {"$project", new BsonDocument{
+                        {"_id", 1},
+                        {"PgsqlDatabaseUsername", 1},
+                        {"CreatedDate", 1},
+                        {"UpdatedDate", 1},
+                        {"Shape", 1},
+                        {"GeoJsonGeometry", 1},
+                        {"PolygonCentroid", 1},
+                        {"Radius", 1},
+                        {"ExternalId", 1},
+                        {"ProjectId", 1},
+                        {"Description", 1},
+                        {"Labels", 1},
+                        {"IntegrationIds", 1},
+                        {"Metadata", 1},
+                        {"OnEnter", 1},
+                        {"OnExit", 1},
+                        {"Enabled", 1},
+                        {"ExpirationDate", 1},
+                        {"LaunchDate", 1},
+                        {"Schedule", 1},
+                        {"TimeZoneId", 1},
+                        {"CalculatedDiff", new BsonDocument{
+                            {"$subtract", new BsonArray{"$dist.calculated","$Radius"}}
+                        }},
+                    }}});
+
+            circularSubPipeline.Add(
+                new BsonDocument{
+                    {"$match", new BsonDocument{
+                        {"CalculatedDiff", new BsonDocument{
+                            {"$lte", 0}
+                        }},
+                        {"PgsqlDatabaseUsername", pgsqlDatabaseUsername}
+                    }}});
+
+            circularSubPipeline.Add(
+                new BsonDocument{
+                    {"$project", new BsonDocument{
+                        {"_id", 1},
+                        {"PgsqlDatabaseUsername", 1},
+                        {"CreatedDate", 1},
+                        {"UpdatedDate", 1},
+                        {"Shape", 1},
+                        {"GeoJsonGeometry", 1},
+                        {"PolygonCentroid", 1},
+                        {"Radius", 1},
+                        {"ExternalId", 1},
+                        {"ProjectId", 1},
+                        {"Description", 1},
+                        {"Labels", 1},
+                        {"IntegrationIds", 1},
+                        {"Metadata", 1},
+                        {"OnEnter", 1},
+                        {"OnExit", 1},
+                        {"Enabled", 1},
+                        {"ExpirationDate", 1},
+                        {"LaunchDate", 1},
+                        {"Schedule", 1},
+                        {"TimeZoneId", 1}
+                    }}});
+            return circularSubPipeline;
+        }
+
+        private static BsonArray GetPolygonSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat)
+        {
+            // https://stackoverflow.com/questions/46090741/how-to-write-union-queries-in-mongodb
+            var polygonSubPipeline = new BsonArray();
+            polygonSubPipeline.Add(
+                new BsonDocument{
+                    {"$match", new BsonDocument{
+                        {"GeoJsonGeometry", new BsonDocument{
+                            {"$geoIntersects", new BsonDocument{
+                                {"$geometry", new BsonDocument{
+                                    {"type", "Point"},
+                                    {"coordinates", new BsonArray { lngLat.Lng, lngLat.Lat }}
+                                }}
+                            }}
+                        }},
+                        {"PgsqlDatabaseUsername", pgsqlDatabaseUsername}
+                    }}
+                });
+            return polygonSubPipeline;
         }
 
         public async Task<IEnumerable<GeofenceResponseModel>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, Guid projectId)
