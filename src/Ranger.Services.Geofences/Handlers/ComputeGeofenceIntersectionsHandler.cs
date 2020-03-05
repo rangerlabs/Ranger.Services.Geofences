@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Ranger.RabbitMQ;
@@ -25,20 +26,25 @@ namespace Ranger.Services.Geofences.Handlers
             try
             {
                 var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.DatabaseUsername, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
+                foreach (var g in geofences)
+                {
+                    var a = g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt);
+                    var b = IsConstructed(g, message.Breadcrumb.RecordedAt);
+                }
+
+                var integrations = geofences.Where(g =>
+                    g.Enabled &&
+                    g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt) &&
+                    IsConstructed(g, message.Breadcrumb.RecordedAt)
+                )?.ToList();
+                return;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to compute intersecting geofences.");
             }
-            // if (message.Breadcrumb.Accuracy > 0)
-            // {
-
-            // }
-            // else
-            // {
-            //     var point = GeoJson.Point(new GeoJson2DGeographicCoordinates(message.Breadcrumb.Longitude, message.Breadcrumb.Latitude));
-            // }
-            return;
         }
+
+        private bool IsConstructed(Geofence geofence, DateTime datetime) => geofence.LaunchDate <= datetime && geofence.ExpirationDate >= datetime;
     }
 }

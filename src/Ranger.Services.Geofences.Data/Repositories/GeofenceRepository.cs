@@ -118,7 +118,7 @@ namespace Ranger.Services.Geofences.Data
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<GeofenceResponseModel>> GetGeofencesContainingLocation(string pgsqlDatabaseUsername, Guid projectId, LngLat lngLat, double accuracy)
+        public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string pgsqlDatabaseUsername, Guid projectId, LngLat lngLat, double accuracy)
         {
             var circularLookup = new BsonDocument{
                 {"$lookup", new BsonDocument{
@@ -152,12 +152,11 @@ namespace Ranger.Services.Geofences.Data
                 .ReplaceRoot<Geofence>("$Union")
                 .ToListAsync();
 
-            return default;
+            return intersectingGeofences;
         }
 
-        private static BsonArray GetCircularSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat)
+        private static BsonArray GetCircularSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat, double accuracy = 0)
         {
-            // https://stackoverflow.com/questions/46090741/how-to-write-union-queries-in-mongodb
             var circularSubPipeline = new BsonArray();
             circularSubPipeline.Add(
                 new BsonDocument{
@@ -241,7 +240,6 @@ namespace Ranger.Services.Geofences.Data
 
         private static BsonArray GetPolygonSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat)
         {
-            // https://stackoverflow.com/questions/46090741/how-to-write-union-queries-in-mongodb
             var polygonSubPipeline = new BsonArray();
             polygonSubPipeline.Add(
                 new BsonDocument{

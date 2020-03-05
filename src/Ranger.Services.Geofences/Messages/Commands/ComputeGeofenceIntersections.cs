@@ -1,5 +1,5 @@
 using System;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Geofences
@@ -7,10 +7,10 @@ namespace Ranger.Services.Geofences
     [MessageNamespace("geofences")]
     public class ComputeGeofenceIntersections : ICommand
     {
-        public string DatabaseUsername { get; set; }
-        public Guid ProjectId { get; set; }
-        public EnvironmentEnum Environment { get; set; }
-        public Breadcrumb Breadcrumb { get; set; }
+        public string DatabaseUsername { get; }
+        public Guid ProjectId { get; }
+        public EnvironmentEnum Environment { get; }
+        public Breadcrumb Breadcrumb { get; }
 
         public ComputeGeofenceIntersections(string databaseUsername, Guid projectId, EnvironmentEnum environment, Breadcrumb breadcrumb)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -47,19 +48,19 @@ namespace Ranger.Services.Geofences
             var geofence = new Geofence(command.Id, tenant.DatabaseUsername);
             geofence.ExternalId = command.ExternalId;
             geofence.ProjectId = command.ProjectId;
-            geofence.Description = command.Description;
+            geofence.Description = String.IsNullOrWhiteSpace(command.Description) ? "" : command.Description;
             geofence.Enabled = command.Enabled;
-            geofence.ExpirationDate = command.ExpirationDate;
+            geofence.ExpirationDate = command.ExpirationDate ?? DateTime.MaxValue;
             geofence.GeoJsonGeometry = GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates);
             geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? Utilities.GetPolygonCentroid(command.Coordinates) : null;
-            geofence.Labels = command.Labels;
-            geofence.IntegrationIds = command.IntegrationIds;
-            geofence.LaunchDate = command.LaunchDate;
-            geofence.Metadata = command.Metadata;
+            geofence.Labels = command.Labels ?? new List<string>();
+            geofence.IntegrationIds = command.IntegrationIds ?? new List<Guid>();
+            geofence.LaunchDate = command.LaunchDate ?? DateTime.UtcNow;
+            geofence.Metadata = command.Metadata ?? new List<KeyValuePair<string, string>>();
             geofence.OnEnter = command.OnEnter;
             geofence.OnExit = command.OnExit;
             geofence.Radius = command.Radius;
-            geofence.Schedule = command.Schedule;
+            geofence.Schedule = command.Schedule ?? Schedule.FullSchedule;
             geofence.Shape = command.Shape;
             geofence.TimeZoneId = "Americas/New_York";
 
