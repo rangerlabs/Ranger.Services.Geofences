@@ -62,9 +62,8 @@ namespace Ranger.Services.Geofences
             geofence.OnEnter = command.OnEnter;
             geofence.OnExit = command.OnExit;
             geofence.Radius = command.Radius;
-            geofence.Schedule = command.Schedule ?? Schedule.FullSchedule;
+            geofence.Schedule = command.Schedule ?? Schedule.FullSchedule("America/New_York");
             geofence.Shape = command.Shape;
-            geofence.TimeZoneId = "Americas/New_York";
 
             try
             {

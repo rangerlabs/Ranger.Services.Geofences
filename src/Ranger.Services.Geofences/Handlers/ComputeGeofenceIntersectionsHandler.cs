@@ -22,19 +22,13 @@ namespace Ranger.Services.Geofences.Handlers
 
         public async Task HandleAsync(ComputeGeofenceIntersections message, ICorrelationContext context)
         {
-            logger.LogDebug("Computing geofence intersections.");
             try
             {
                 var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.DatabaseUsername, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
-                foreach (var g in geofences)
-                {
-                    var a = g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt);
-                    var b = IsConstructed(g, message.Breadcrumb.RecordedAt);
-                }
 
                 var integrations = geofences.Where(g =>
                     g.Enabled &&
-                    g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt) &&
+                    g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime()) &&
                     IsConstructed(g, message.Breadcrumb.RecordedAt)
                 )?.ToList();
                 return;
@@ -45,6 +39,6 @@ namespace Ranger.Services.Geofences.Handlers
             }
         }
 
-        private bool IsConstructed(Geofence geofence, DateTime datetime) => geofence.LaunchDate <= datetime && geofence.ExpirationDate >= datetime;
+        private bool IsConstructed(Geofence geofence, DateTime datetime) => geofence.LaunchDate <= datetime && datetime <= geofence.ExpirationDate;
     }
 }

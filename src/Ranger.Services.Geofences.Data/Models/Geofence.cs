@@ -28,6 +28,5 @@ namespace Ranger.Services.Geofences.Data
         public DateTime ExpirationDate { get; set; }
         public DateTime LaunchDate { get; set; }
         public Schedule Schedule { get; set; }
-        public string TimeZoneId { get; set; }
     }
 }
