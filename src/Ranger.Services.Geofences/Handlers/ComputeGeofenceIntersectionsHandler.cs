@@ -24,7 +24,13 @@ namespace Ranger.Services.Geofences.Handlers
         {
             try
             {
+                var convertedDateTime = message.Breadcrumb.RecordedAt.ToUniversalTime();
                 var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.DatabaseUsername, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
+                foreach (var g in geofences)
+                {
+                    var a = g.Schedule.IsWithinSchedule(convertedDateTime);
+                    var b = IsConstructed(g, message.Breadcrumb.RecordedAt);
+                }
 
                 var integrations = geofences.Where(g =>
                     g.Enabled &&
