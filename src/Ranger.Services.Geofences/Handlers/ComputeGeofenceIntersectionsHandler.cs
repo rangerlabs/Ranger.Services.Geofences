@@ -29,7 +29,8 @@ namespace Ranger.Services.Geofences.Handlers
                     g.Enabled &&
                     g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime()) &&
                     IsConstructed(g, message.Breadcrumb.RecordedAt)
-                )?.ToList();
+                ).ToList();
+                // var executeIntegrationsMsg = new ExecuteIntegrations(message.DatabaseUsername, message.ProjectId, message.Environment, message.Breadcrumb, in)
                 return;
             }
             catch (Exception ex)
