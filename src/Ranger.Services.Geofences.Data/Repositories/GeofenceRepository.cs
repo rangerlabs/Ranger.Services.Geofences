@@ -258,7 +258,7 @@ namespace Ranger.Services.Geofences.Data
             return polygonSubPipeline;
         }
 
-        public async Task<IEnumerable<GeofenceResponseModel>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, Guid projectId)
+        public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, Guid projectId)
         {
             if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
             {
@@ -272,52 +272,9 @@ namespace Ranger.Services.Geofences.Data
                 .As<Geofence>()
                 .ToListAsync();
 
-            var geofenceResponse = new List<GeofenceResponseModel>();
-            foreach (var geofence in geofences)
-            {
-                geofenceResponse.Add(new GeofenceResponseModel
-                {
-                    Id = geofence.Id,
-                    Enabled = geofence.Enabled,
-                    Description = geofence.Description,
-                    ExpirationDate = geofence.ExpirationDate,
-                    ExternalId = geofence.ExternalId,
-                    Coordinates = getCoordinatesByShape(geofence.Shape, geofence.GeoJsonGeometry),
-                    IntegrationIds = geofence.IntegrationIds,
-                    Labels = geofence.Labels,
-                    LaunchDate = geofence.LaunchDate,
-                    Metadata = geofence.Metadata,
-                    OnEnter = geofence.OnEnter,
-                    OnExit = geofence.OnExit,
-                    ProjectId = geofence.ProjectId,
-                    Radius = geofence.Radius,
-                    Schedule = geofence.Schedule,
-                    Shape = geofence.Shape
-                });
-            }
-
-            return geofenceResponse;
+            return geofences;
         }
 
-        private IEnumerable<LngLat> getCoordinatesByShape(GeofenceShapeEnum shape, GeoJsonGeometry<GeoJson2DGeographicCoordinates> geoJsonGeometry)
-        {
-            switch (shape)
-            {
-                case GeofenceShapeEnum.Circle:
-                    {
-                        var point = (geoJsonGeometry as GeoJsonPoint<GeoJson2DGeographicCoordinates>);
-                        return new LngLat[] { new LngLat(point.Coordinates.Longitude, point.Coordinates.Latitude) };
-                    }
-                case GeofenceShapeEnum.Polygon:
-                    {
-                        var count = (geoJsonGeometry as GeoJsonPolygon<GeoJson2DGeographicCoordinates>).Coordinates.Exterior.Positions.Count();
-                        var points = (geoJsonGeometry as GeoJsonPolygon<GeoJson2DGeographicCoordinates>).Coordinates.Exterior.Positions.Take(count - 1).Select(_ => new LngLat(_.Longitude, _.Latitude));
-                        return points;
-                    }
-                default:
-                    return new LngLat[0];
-            }
-        }
 
         private async Task insertDeletedChangeLog(string pgsqlDatabaseUsername, Guid projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
         {

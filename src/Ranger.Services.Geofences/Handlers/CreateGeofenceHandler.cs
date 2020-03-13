@@ -62,7 +62,7 @@ namespace Ranger.Services.Geofences
             geofence.OnEnter = command.OnEnter;
             geofence.OnExit = command.OnExit;
             geofence.Radius = command.Radius;
-            geofence.Schedule = command.Schedule ?? Schedule.FullSchedule("America/New_York");
+            geofence.Schedule = command.Schedule ?? Schedule.FullUtcSchedule;
             geofence.Shape = command.Shape;
 
             try
