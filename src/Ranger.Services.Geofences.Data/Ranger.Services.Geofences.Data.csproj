@@ -14,7 +14,7 @@
     <PackageReference Include="NodaTime.Serialization.JsonNet" Version="2.2.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.0" />
-    <PackageReference Include="Ranger.Common" Version="2.3.3" />
+    <PackageReference Include="Ranger.Common" Version="2.3.4" />
     <PackageReference Include="Ranger.Mongo" Version="2.1.9" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
