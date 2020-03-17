@@ -55,7 +55,7 @@ namespace Ranger.Services.Geofences
             geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? Utilities.GetPolygonCentroid(command.Coordinates) : null;
             geofence.Labels = command.Labels ?? new List<string>();
             geofence.IntegrationIds = command.IntegrationIds ?? new List<Guid>();
-            geofence.LaunchDate = command.LaunchDate ?? DateTime.UtcNow;
+            geofence.LaunchDate = command.LaunchDate ?? DateTime.MinValue;
             geofence.Metadata = command.Metadata ?? new List<KeyValuePair<string, string>>();
             geofence.OnEnter = command.OnEnter;
             geofence.OnExit = command.OnExit;

@@ -6,8 +6,8 @@ using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Geofences
 {
-    [MessageNamespace("integrations")]
-    public class ExecuteIntegrations : ICommand
+    [MessageNamespace("geofences")]
+    public class GeofenceIntersectionsComputed : IEvent
     {
         public string DatabaseUsername { get; }
         public Guid ProjectId { get; }
@@ -17,16 +17,14 @@ namespace Ranger.Services.Geofences
         public IEnumerable<KeyValuePair<string, string>> GeofenceMetadata { get; }
         public Guid GeofenceId { get; }
         public string GeofenceDescription { get; }
-        public GeofenceEventEnum GeofenceEvent { get; }
 
-        public ExecuteIntegrations(
+        public GeofenceIntersectionsComputed(
             string databaseUsername,
             Guid projectId,
             EnvironmentEnum environment,
             Breadcrumb breadcrumb,
             IEnumerable<Guid> integrationIds,
             Guid geofenceId,
-            GeofenceEventEnum geofenceEvent,
             string geofenceDescription = "",
             IEnumerable<KeyValuePair<string, string>> geofenceMetadata = null
             )
@@ -50,7 +48,6 @@ namespace Ranger.Services.Geofences
             this.Breadcrumb = breadcrumb ?? throw new ArgumentNullException(nameof(breadcrumb));
             this.IntegrationIds = integrationIds ?? throw new ArgumentNullException(nameof(integrationIds));
             this.GeofenceId = geofenceId;
-            this.GeofenceEvent = geofenceEvent;
             this.GeofenceDescription = geofenceDescription;
             this.GeofenceMetadata = geofenceMetadata;
         }
