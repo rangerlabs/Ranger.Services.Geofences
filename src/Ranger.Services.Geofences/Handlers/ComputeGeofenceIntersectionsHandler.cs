@@ -25,19 +25,19 @@ namespace Ranger.Services.Geofences.Handlers
             try
             {
                 var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.DatabaseUsername, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
-                var geofenceIntegrationResults = geofences.Where(g =>
+                var geofenceIntersectionIds = geofences.Where(g =>
                     g.Enabled &&
                     g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime()) &&
                     IsConstructed(g, message.Breadcrumb.RecordedAt)
-                ).Select(g => new GeofenceIntegrationResult(g.Id, g.ExternalId, g.Description, g.Metadata, g.IntegrationIds)).ToList();
+                ).Select(g => g.Id).ToList();
 
-                busPublisher.Publish(new GeofenceIntersectionsComputed(
+                busPublisher.Send(new ComputeGeofenceEvents(
                     message.DatabaseUsername,
                     message.Domain,
                     message.ProjectId,
                     message.Environment,
                     message.Breadcrumb,
-                    geofenceIntegrationResults
+                    geofenceIntersectionIds
                ), context);
             }
             catch (Exception ex)

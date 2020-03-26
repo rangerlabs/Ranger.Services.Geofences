@@ -118,6 +118,14 @@ namespace Ranger.Services.Geofences.Data
                 .FirstOrDefaultAsync();
         }
 
+
+        public async Task<IEnumerable<Geofence>> GetGeofencesAsync(string pgsqlDatabaseUsername, Guid projectId, IEnumerable<Guid> geofenceIds)
+        {
+            return await geofenceCollection.Aggregate()
+                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && geofenceIds.Contains(g.Id))
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string pgsqlDatabaseUsername, Guid projectId, LngLat lngLat, double accuracy)
         {
             var circularLookup = new BsonDocument{
