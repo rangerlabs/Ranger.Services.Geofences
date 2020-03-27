@@ -42,7 +42,10 @@ namespace Ranger.Services.Geofences
                         )
                     );
 
-                busPublisher.Send(new ExecuteGeofenceIntegrations(message.Domain, message.ProjectId, message.Environment, message.Breadcrumb, geofenceIntegrationResults), context);
+                if (geofenceIntegrationResults.Any())
+                {
+                    busPublisher.Send(new ExecuteGeofenceIntegrations(message.Domain, message.ProjectId, message.Environment, message.Breadcrumb, geofenceIntegrationResults), context);
+                }
             }
             catch (Exception ex)
             {
