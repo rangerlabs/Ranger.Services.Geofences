@@ -60,6 +60,7 @@ namespace Ranger.Services.Geofences
             geofence.LaunchDate = command.LaunchDate ?? DateTime.MinValue;
             geofence.Metadata = command.Metadata ?? new List<KeyValuePair<string, string>>();
             geofence.OnEnter = command.OnEnter;
+            geofence.OnDwell = command.OnDwell;
             geofence.OnExit = command.OnExit;
             geofence.Radius = command.Radius;
             geofence.Schedule = command.Schedule ?? Schedule.FullUtcSchedule;

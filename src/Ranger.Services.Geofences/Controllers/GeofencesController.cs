@@ -66,6 +66,7 @@ namespace Ranger.Services.Geofences.Controllers
                         LaunchDate = geofence.LaunchDate,
                         Metadata = geofence.Metadata,
                         OnEnter = geofence.OnEnter,
+                        OnDwell = geofence.OnDwell,
                         OnExit = geofence.OnExit,
                         ProjectId = geofence.ProjectId,
                         Radius = geofence.Radius,

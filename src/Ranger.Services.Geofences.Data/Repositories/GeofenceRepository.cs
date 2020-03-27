@@ -198,6 +198,7 @@ namespace Ranger.Services.Geofences.Data
                         {"IntegrationIds", 1},
                         {"Metadata", 1},
                         {"OnEnter", 1},
+                        {"OnDwell", 1},
                         {"OnExit", 1},
                         {"Enabled", 1},
                         {"ExpirationDate", 1},
@@ -236,6 +237,7 @@ namespace Ranger.Services.Geofences.Data
                         {"IntegrationIds", 1},
                         {"Metadata", 1},
                         {"OnEnter", 1},
+                        {"OnDwell", 1},
                         {"OnExit", 1},
                         {"Enabled", 1},
                         {"ExpirationDate", 1},
@@ -275,7 +277,7 @@ namespace Ranger.Services.Geofences.Data
 
             var geofences = await geofenceCollection.Aggregate()
                 .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId)
-                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
+                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
                 .Sort("{ExternalId:1}")
                 .As<Geofence>()
                 .ToListAsync();

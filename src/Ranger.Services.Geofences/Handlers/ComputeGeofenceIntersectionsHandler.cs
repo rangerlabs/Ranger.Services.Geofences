@@ -25,11 +25,7 @@ namespace Ranger.Services.Geofences.Handlers
             try
             {
                 var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.DatabaseUsername, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
-                var geofenceIntersectionIds = geofences.Where(g =>
-                    g.Enabled &&
-                    g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime()) &&
-                    IsConstructed(g, message.Breadcrumb.RecordedAt)
-                ).Select(g => g.Id).ToList();
+                var geofenceIntersectionIds = geofences.Select(g => g.Id).ToList();
 
                 busPublisher.Send(new ComputeGeofenceEvents(
                     message.DatabaseUsername,
@@ -45,7 +41,5 @@ namespace Ranger.Services.Geofences.Handlers
                 logger.LogError(ex, "Failed to compute intersecting geofences.");
             }
         }
-
-        private bool IsConstructed(Geofence geofence, DateTime datetime) => geofence.LaunchDate <= datetime && datetime <= geofence.ExpirationDate;
     }
 }
