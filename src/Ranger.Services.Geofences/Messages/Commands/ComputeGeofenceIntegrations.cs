@@ -8,37 +8,30 @@ namespace Ranger.Services.Geofences
     [MessageNamespace("geofences")]
     public class ComputeGeofenceIntegrations : ICommand
     {
-        public string DatabaseUsername { get; }
-        public string Domain { get; }
+        public string TenantId { get; }
         public Guid ProjectId { get; }
         public EnvironmentEnum Environment { get; }
         public Common.Breadcrumb Breadcrumb { get; }
         public IEnumerable<BreadcrumbGeofenceResult> BreadcrumbGeofenceResults { get; }
 
         public ComputeGeofenceIntegrations(
-            string databaseUsername,
-            string domain,
+            string tenantId,
             Guid projectId,
             EnvironmentEnum environment,
             Common.Breadcrumb breadcrumb,
             IEnumerable<BreadcrumbGeofenceResult> breadcrumbGeofenceResults
             )
         {
-            if (string.IsNullOrWhiteSpace(databaseUsername))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(databaseUsername)} was null or whitespace.");
-            }
-            if (string.IsNullOrWhiteSpace(domain))
-            {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (projectId.Equals(Guid.Empty))
             {
                 throw new ArgumentException($"{nameof(projectId)} was an empty Guid.");
             }
 
-            this.DatabaseUsername = databaseUsername;
-            this.Domain = domain;
+            this.TenantId = tenantId;
             this.ProjectId = projectId;
             this.Environment = environment;
             this.Breadcrumb = breadcrumb ?? throw new ArgumentNullException(nameof(breadcrumb));

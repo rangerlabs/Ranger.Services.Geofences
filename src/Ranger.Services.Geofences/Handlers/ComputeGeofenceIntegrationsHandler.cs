@@ -25,7 +25,7 @@ namespace Ranger.Services.Geofences
         {
             try
             {
-                var geofences = await geofenceRepository.GetGeofencesAsync(message.DatabaseUsername, message.ProjectId, message.BreadcrumbGeofenceResults.Select(b => b.GeofenceId));
+                var geofences = await geofenceRepository.GetGeofencesAsync(message.TenantId, message.ProjectId, message.BreadcrumbGeofenceResults.Select(b => b.GeofenceId));
                 var geofenceIntegrationResults = geofences.Where(g =>
                         g.Enabled &&
                         g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime()) &&
@@ -44,7 +44,7 @@ namespace Ranger.Services.Geofences
 
                 if (geofenceIntegrationResults.Any())
                 {
-                    busPublisher.Send(new ExecuteGeofenceIntegrations(message.Domain, message.ProjectId, message.Environment, message.Breadcrumb, geofenceIntegrationResults), context);
+                    busPublisher.Send(new ExecuteGeofenceIntegrations(message.TenantId, message.ProjectId, message.Environment, message.Breadcrumb, geofenceIntegrationResults), context);
                 }
             }
             catch (Exception ex)

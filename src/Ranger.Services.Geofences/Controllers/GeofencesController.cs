@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,40 +17,28 @@ namespace Ranger.Services.Geofences.Controllers
     public class GeofencesController : ControllerBase
     {
         private readonly IGeofenceRepository geofenceRepository;
-        private readonly ITenantsClient tenantsClient;
+        private readonly TenantsHttpClient tenantsClient;
         private readonly ILogger<GeofencesController> logger;
 
-        public GeofencesController(IGeofenceRepository geofenceRepository, ITenantsClient tenantsClient, ILogger<GeofencesController> logger)
+        public GeofencesController(IGeofenceRepository geofenceRepository, TenantsHttpClient tenantsClient, ILogger<GeofencesController> logger)
         {
             this.geofenceRepository = geofenceRepository;
             this.tenantsClient = tenantsClient;
             this.logger = logger;
         }
 
-        [HttpGet("/{domain}/geofences")]
-        public async Task<IActionResult> GetAllGeofences([FromRoute] string domain, [FromQuery] Guid projectId)
+        ///<summary>
+        /// Updates an existing project
+        ///</summary>
+        ///<param name="tenantId">The tenant id to retrieve geofences for</param>
+        ///<param name="projectId">The project id to retrieve geofences for</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/{domain}/geofences/{projectId}")]
+        public async Task<ApiResponse> GetAllGeofences(string tenantId, Guid projectId)
         {
-            ContextTenant tenant = null;
             try
             {
-                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(domain);
-            }
-            catch (HttpClientException ex)
-            {
-                if ((int)ex.ApiResponse.StatusCode == StatusCodes.Status404NotFound)
-                {
-                    return NotFound();
-                }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex, "An exception occurred retrieving the ContextTenant object. Cannot construct the tenant specific repository.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
-            try
-            {
-                var geofences = await this.geofenceRepository.GetAllGeofencesByProjectId(tenant.DatabaseUsername, projectId);
+                var geofences = await this.geofenceRepository.GetAllGeofencesByProjectId(tenantId, projectId);
                 var geofenceResponse = new List<GeofenceResponseModel>();
                 foreach (var geofence in geofences)
                 {
@@ -74,12 +63,13 @@ namespace Ranger.Services.Geofences.Controllers
                         Shape = geofence.Shape
                     });
                 }
-                return Ok(geofenceResponse);
+                return new ApiResponse("Successfully retrieved geofences", geofenceResponse);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"An exception occurred retrieving the requested geofences for domain '{domain}' and projectId '{projectId}'");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                var message = "An error occurred retrieving geofences";
+                this.logger.LogError(ex, message);
+                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
 

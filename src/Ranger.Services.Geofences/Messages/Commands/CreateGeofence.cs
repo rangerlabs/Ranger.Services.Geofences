@@ -10,7 +10,7 @@ namespace Ranger.Services.Geofences
     public class CreateGeofence : ICommand
     {
         public CreateGeofence(string commandingUserEmailOrTokenPrefix,
-            string domain,
+            string tenantId,
             string externalId,
             Guid projectId,
             GeofenceShapeEnum shape,
@@ -32,9 +32,9 @@ namespace Ranger.Services.Geofences
             {
                 throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
             }
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
@@ -55,8 +55,7 @@ namespace Ranger.Services.Geofences
             this.Coordinates = coordinates;
             this.Shape = shape;
             this.Radius = radius;
-
-            this.Domain = domain;
+            this.TenantId = tenantId;
             this.ExternalId = externalId;
             this.ProjectId = projectId;
             this.Labels = labels;
@@ -73,7 +72,7 @@ namespace Ranger.Services.Geofences
         }
 
         public string CommandingUserEmailOrTokenPrefix { get; }
-        public string Domain { get; }
+        public string TenantId { get; }
         public string ExternalId { get; }
         public Guid ProjectId { get; }
         public IEnumerable<string> Labels { get; }

@@ -5,6 +5,10 @@
     <OutputType>Exe</OutputType>
     <PackageId>Ranger.Services.Geofences</PackageId>
   </PropertyGroup>
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="./Certs/*.pfx" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -24,10 +28,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.1" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Ranger.Mongo" Version="2.1.9" />
+    <PackageReference Include="Ranger.Mongo" Version="2.2.0" />
     <PackageReference Include="Ranger.RabbitMQ" version="2.2.2" />
-    <PackageReference Include="Ranger.InternalHttpClient" Version="3.3.2" />
     <PackageReference Include="S2Geometry" Version="1.0.3" />
+    <PackageReference Include="Ranger.ApiUtilities" Version="3.2.9" />
+    <PackageReference Include="Ranger.InternalHttpClient" Version="4.2.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Geofences.Data\Ranger.Services.Geofences.Data.csproj" />

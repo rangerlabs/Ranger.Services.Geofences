@@ -8,7 +8,7 @@ namespace Ranger.Services.Geofences.Data
 {
     public class Geofence : BaseMultitenantEntity
     {
-        public Geofence(Guid id, string pgsqlDatabaseUsername) : base(id, pgsqlDatabaseUsername)
+        public Geofence(Guid id, string tenantId) : base(id, tenantId)
         { }
 
         public GeofenceShapeEnum Shape { get; set; }

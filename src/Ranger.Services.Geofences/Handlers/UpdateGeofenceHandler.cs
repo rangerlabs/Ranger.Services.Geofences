@@ -15,12 +15,10 @@ namespace Ranger.Services.Geofences
     {
         private readonly IBusPublisher busPublisher;
         private readonly IGeofenceRepository repository;
-        private readonly ITenantsClient tenantsClient;
         private readonly ILogger<UpdateGeofenceHandler> logger;
 
-        public UpdateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, ITenantsClient tenantsClient, ILogger<UpdateGeofenceHandler> logger)
+        public UpdateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, ILogger<UpdateGeofenceHandler> logger)
         {
-            this.tenantsClient = tenantsClient;
             this.logger = logger;
             this.busPublisher = busPublisher;
             this.repository = repository;
@@ -28,24 +26,8 @@ namespace Ranger.Services.Geofences
 
         public async Task HandleAsync(UpdateGeofence command, ICorrelationContext context)
         {
-            ContextTenant tenant = null;
-            try
-            {
-                tenant = await this.tenantsClient.GetTenantAsync<ContextTenant>(command.Domain);
-            }
-            catch (HttpClientException ex)
-            {
-                if ((int)ex.ApiResponse.StatusCode == StatusCodes.Status404NotFound)
-                {
-                    throw new RangerException($"No tenant found for domain {command.Domain}.");
-                }
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex, "An exception occurred retrieving the ContextTenant object. Cannot construct the tenant specific repository.");
-                throw;
-            }
-            var geofence = new Geofence(command.Id, tenant.DatabaseUsername);
+
+            var geofence = new Geofence(command.Id, command.TenantId);
             geofence.ExternalId = command.ExternalId;
             geofence.ProjectId = command.ProjectId;
             geofence.Description = String.IsNullOrWhiteSpace(command.Description) ? "" : command.Description;
@@ -67,7 +49,7 @@ namespace Ranger.Services.Geofences
             try
             {
                 await repository.UpdateGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
-                busPublisher.Publish(new GeofenceUpdated(command.Domain, command.ExternalId, command.Id), CorrelationContext.FromId(context.CorrelationContextId));
+                busPublisher.Publish(new GeofenceUpdated(command.TenantId, command.ExternalId, command.Id), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (RangerException)
             {

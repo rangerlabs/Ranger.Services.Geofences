@@ -58,14 +58,14 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
             }
 
-            var currentGeofence = await this.GetGeofenceAsync(geofence.PgsqlDatabaseUsername, geofence.ProjectId, geofence.Id);
+            var currentGeofence = await this.GetGeofenceAsync(geofence.TenantId, geofence.ProjectId, geofence.Id);
             if (currentGeofence is null)
             {
                 throw new RangerException($"A geofence could not be found for the provided Id '{geofence.Id}'.");
             }
 
             await geofenceCollection.ReplaceOneAsync(
-                (_) => _.PgsqlDatabaseUsername == geofence.PgsqlDatabaseUsername && _.ProjectId == geofence.ProjectId && _.Id == geofence.Id,
+                (_) => _.TenantId == geofence.TenantId && _.ProjectId == geofence.ProjectId && _.Id == geofence.Id,
                 geofence
             );
 
@@ -73,11 +73,11 @@ namespace Ranger.Services.Geofences.Data
             return;
         }
 
-        public async Task DeleteGeofence(string pgsqlDatabaseUsername, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix)
+        public async Task DeleteGeofence(string tenantId, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix)
         {
-            if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
@@ -88,7 +88,7 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
             }
 
-            var geofence = await GetGeofenceAsync(pgsqlDatabaseUsername, projectId, externalId);
+            var geofence = await GetGeofenceAsync(tenantId, projectId, externalId);
 
             if (geofence is null)
             {
@@ -96,43 +96,43 @@ namespace Ranger.Services.Geofences.Data
             }
 
             await geofenceCollection.DeleteOneAsync(
-                (_) => _.PgsqlDatabaseUsername == pgsqlDatabaseUsername && _.ProjectId == projectId && _.ExternalId == externalId
+                (_) => _.TenantId == tenantId && _.ProjectId == projectId && _.ExternalId == externalId
             );
-            await insertDeletedChangeLog(pgsqlDatabaseUsername, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
+            await insertDeletedChangeLog(tenantId, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, Guid projectId, string externalId)
+        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, string externalId)
         {
             return await geofenceCollection.Aggregate()
-                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.ExternalId == externalId)
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && g.ExternalId == externalId)
                 .As<Geofence>()
                 .FirstOrDefaultAsync();
 
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string pgsqlDatabaseUsername, Guid projectId, Guid geofenceId)
+        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, Guid geofenceId)
         {
             return await geofenceCollection.Aggregate()
-                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && g.Id == geofenceId)
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && g.Id == geofenceId)
                 .As<Geofence>()
                 .FirstOrDefaultAsync();
         }
 
 
-        public async Task<IEnumerable<Geofence>> GetGeofencesAsync(string pgsqlDatabaseUsername, Guid projectId, IEnumerable<Guid> geofenceIds)
+        public async Task<IEnumerable<Geofence>> GetGeofencesAsync(string tenantId, Guid projectId, IEnumerable<Guid> geofenceIds)
         {
             return await geofenceCollection.Aggregate()
-                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId && geofenceIds.Contains(g.Id))
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && geofenceIds.Contains(g.Id))
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string pgsqlDatabaseUsername, Guid projectId, LngLat lngLat, double accuracy)
+        public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy)
         {
             var circularLookup = new BsonDocument{
                 {"$lookup", new BsonDocument{
                     {"from", "geofences"},
                     {"let", new BsonDocument{}},
-                    {"pipeline", GetCircularSubPipeline(pgsqlDatabaseUsername, lngLat)},
+                    {"pipeline", GetCircularSubPipeline(tenantId, lngLat)},
                     {"as", "CircularMatches"}
                 }}
             };
@@ -140,7 +140,7 @@ namespace Ranger.Services.Geofences.Data
                 {"$lookup", new BsonDocument{
                     {"from", "geofences"},
                     {"let", new BsonDocument{}},
-                    {"pipeline", GetPolygonSubPipeline(pgsqlDatabaseUsername, lngLat)},
+                    {"pipeline", GetPolygonSubPipeline(tenantId, lngLat)},
                     {"as", "PolygonMatches"}
                 }}
             };
@@ -163,7 +163,7 @@ namespace Ranger.Services.Geofences.Data
             return intersectingGeofences;
         }
 
-        private static BsonArray GetCircularSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat, double accuracy = 0)
+        private static BsonArray GetCircularSubPipeline(string tenantId, LngLat lngLat, double accuracy = 0)
         {
             var circularSubPipeline = new BsonArray();
             circularSubPipeline.Add(
@@ -184,7 +184,7 @@ namespace Ranger.Services.Geofences.Data
                 new BsonDocument{
                     {"$project", new BsonDocument{
                         {"_id", 1},
-                        {"PgsqlDatabaseUsername", 1},
+                        {"TenantId", 1},
                         {"CreatedDate", 1},
                         {"UpdatedDate", 1},
                         {"Shape", 1},
@@ -216,14 +216,14 @@ namespace Ranger.Services.Geofences.Data
                         {"CalculatedDiff", new BsonDocument{
                             {"$lte", 0}
                         }},
-                        {"PgsqlDatabaseUsername", pgsqlDatabaseUsername}
+                        {"TenantId", tenantId}
                     }}});
 
             circularSubPipeline.Add(
                 new BsonDocument{
                     {"$project", new BsonDocument{
                         {"_id", 1},
-                        {"PgsqlDatabaseUsername", 1},
+                        {"TenantId", 1},
                         {"CreatedDate", 1},
                         {"UpdatedDate", 1},
                         {"Shape", 1},
@@ -248,7 +248,7 @@ namespace Ranger.Services.Geofences.Data
             return circularSubPipeline;
         }
 
-        private static BsonArray GetPolygonSubPipeline(string pgsqlDatabaseUsername, LngLat lngLat)
+        private static BsonArray GetPolygonSubPipeline(string tenantId, LngLat lngLat)
         {
             var polygonSubPipeline = new BsonArray();
             polygonSubPipeline.Add(
@@ -262,21 +262,21 @@ namespace Ranger.Services.Geofences.Data
                                 }}
                             }}
                         }},
-                        {"PgsqlDatabaseUsername", pgsqlDatabaseUsername}
+                        {"TenantId", tenantId}
                     }}
                 });
             return polygonSubPipeline;
         }
 
-        public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string pgsqlDatabaseUsername, Guid projectId)
+        public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string tenantId, Guid projectId)
         {
-            if (string.IsNullOrWhiteSpace(pgsqlDatabaseUsername))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(pgsqlDatabaseUsername)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
 
             var geofences = await geofenceCollection.Aggregate()
-                .Match(g => g.PgsqlDatabaseUsername == pgsqlDatabaseUsername && g.ProjectId == projectId)
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
                 .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
                 .Sort("{ExternalId:1}")
                 .As<Geofence>()
@@ -286,9 +286,9 @@ namespace Ranger.Services.Geofences.Data
         }
 
 
-        private async Task insertDeletedChangeLog(string pgsqlDatabaseUsername, Guid projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
+        private async Task insertDeletedChangeLog(string tenantId, Guid projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
         {
-            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), pgsqlDatabaseUsername);
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), tenantId);
             changeLog.GeofenceId = geofenceId;
             changeLog.ProjectId = projectId;
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
@@ -298,7 +298,7 @@ namespace Ranger.Services.Geofences.Data
 
         private async Task insertCreatedChangeLog(Geofence geofence, string commandingUserEmailOrTokenPrefix)
         {
-            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), geofence.PgsqlDatabaseUsername);
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), geofence.TenantId);
             changeLog.GeofenceId = geofence.Id;
             changeLog.ProjectId = geofence.ProjectId;
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
@@ -309,7 +309,7 @@ namespace Ranger.Services.Geofences.Data
 
         private async Task insertUpsertedChangeLog(Geofence currentGeofence, Geofence updatedGeofence, string commandingUserEmailOrTokenPrefix)
         {
-            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), updatedGeofence.PgsqlDatabaseUsername);
+            var changeLog = new GeofenceChangeLog(Guid.NewGuid(), updatedGeofence.TenantId);
             if (currentGeofence != null)
             {
                 var diff = this.jsonDiffPatch.Diff(JsonConvert.SerializeObject(currentGeofence), JsonConvert.SerializeObject(updatedGeofence));

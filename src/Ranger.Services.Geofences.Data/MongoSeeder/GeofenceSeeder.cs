@@ -33,7 +33,7 @@ namespace Ranger.Services.Geofences.Data
             try
             {
                 IList<CreateIndexModel<GeofenceChangeLog>> indexModels = new List<CreateIndexModel<GeofenceChangeLog>>();
-                indexModels.Add(new CreateIndexModel<GeofenceChangeLog>(Builders<GeofenceChangeLog>.IndexKeys.Ascending(_ => _.PgsqlDatabaseUsername).Ascending(_ => _.ProjectId).Ascending(_ => _.GeofenceId)));
+                indexModels.Add(new CreateIndexModel<GeofenceChangeLog>(Builders<GeofenceChangeLog>.IndexKeys.Ascending(_ => _.TenantId).Ascending(_ => _.ProjectId).Ascending(_ => _.GeofenceId)));
                 await geofenceChangeLogsCollection.Indexes.CreateManyAsync(indexModels);
             }
             catch (Exception ex)
@@ -52,7 +52,7 @@ namespace Ranger.Services.Geofences.Data
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.Shape)));
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Geo2DSphere(_ => _.GeoJsonGeometry)));
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.ProjectId).Ascending(_ => _.ExternalId), new CreateIndexOptions() { Unique = true }));
-                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.PgsqlDatabaseUsername).Ascending(_ => _.ProjectId)));
+                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.TenantId).Ascending(_ => _.ProjectId)));
                 await geofencesCollection.Indexes.CreateManyAsync(indexModels);
             }
             catch (Exception ex)

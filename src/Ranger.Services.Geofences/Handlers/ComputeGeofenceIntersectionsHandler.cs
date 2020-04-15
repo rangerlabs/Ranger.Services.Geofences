@@ -24,12 +24,11 @@ namespace Ranger.Services.Geofences.Handlers
         {
             try
             {
-                var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.DatabaseUsername, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
+                var geofences = await geofenceRepository.GetGeofencesContainingLocation(message.TenantId, message.ProjectId, message.Breadcrumb.Position, message.Breadcrumb.Accuracy);
                 var geofenceIntersectionIds = geofences.Select(g => g.Id).ToList();
 
                 busPublisher.Send(new ComputeGeofenceEvents(
-                    message.DatabaseUsername,
-                    message.Domain,
+                    message.TenantId,
                     message.ProjectId,
                     message.Environment,
                     message.Breadcrumb,

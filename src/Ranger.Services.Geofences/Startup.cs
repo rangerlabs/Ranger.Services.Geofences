@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
+using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Mongo;
@@ -49,6 +50,8 @@ namespace Ranger.Services.Geofences
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
                 });
+            services.AddAutoWrapper();
+            services.AddSwaggerGen("Geofences API", "v1");
 
             services.AddAuthorization(options =>
             {
@@ -58,12 +61,9 @@ namespace Ranger.Services.Geofences
                     });
             });
 
-            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
-            {
-                return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
-            });
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "");
 
-            services.AddEntityFrameworkNpgsql().AddDbContext<GeofencesDbContext>(options =>
+            services.AddDbContext<GeofencesDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },
@@ -87,7 +87,6 @@ namespace Ranger.Services.Geofences
             services.AddDataProtection()
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<GeofencesDbContext>();
-
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -103,6 +102,8 @@ namespace Ranger.Services.Geofences
             var logger = loggerFactory.CreateLogger<Startup>();
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
+            app.UseSwagger("v1", "Geofences API");
+            app.UseAutoWrapper();
             app.UseRouting();
             app.UseAuthentication();
             app.UseEndpoints(endpoints =>
@@ -122,7 +123,6 @@ namespace Ranger.Services.Geofences
                 )
                 .SubscribeCommand<ComputeGeofenceIntersections>()
                 .SubscribeCommand<ComputeGeofenceIntegrations>();
-
 
             this.InitializeMongoDb(app, logger);
         }
