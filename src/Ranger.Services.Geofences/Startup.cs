@@ -61,7 +61,7 @@ namespace Ranger.Services.Geofences
                     });
             });
 
-            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "");
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
 
             services.AddDbContext<GeofencesDbContext>(options =>
             {
