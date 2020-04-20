@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,15 +53,9 @@ namespace Ranger.Services.Geofences
                 });
             services.AddAutoWrapper();
             services.AddSwaggerGen("Geofences API", "v1");
+            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("geofencesApi", policyBuilder =>
-                    {
-                        policyBuilder.RequireScope("geofencesApi");
-                    });
-            });
-
+            services.AddPollyPolicyRegistry();
             services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
 
             services.AddDbContext<GeofencesDbContext>(options =>
@@ -80,7 +75,6 @@ namespace Ranger.Services.Geofences
                 {
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "geofencesApi";
-
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -104,8 +98,12 @@ namespace Ranger.Services.Geofences
 
             app.UseSwagger("v1", "Geofences API");
             app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
