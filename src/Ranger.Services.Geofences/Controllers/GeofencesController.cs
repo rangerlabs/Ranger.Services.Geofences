@@ -72,7 +72,7 @@ namespace Ranger.Services.Geofences.Controllers
             {
                 var message = "An error occurred retrieving geofences";
                 this.logger.LogError(ex, message);
-                throw new ApiException(new RangerApiError(message), statusCode: StatusCodes.Status500InternalServerError);
+                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
 
