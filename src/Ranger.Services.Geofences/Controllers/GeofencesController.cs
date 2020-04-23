@@ -36,7 +36,7 @@ namespace Ranger.Services.Geofences.Controllers
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
         ///<param name="projectId">The project id to retrieve geofences for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet("/{domain}/geofences/{projectId}")]
+        [HttpGet("/geofences/{tenantId}/{projectId}")]
         public async Task<ApiResponse> GetAllGeofences(string tenantId, Guid projectId)
         {
             try
