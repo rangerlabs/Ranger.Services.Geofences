@@ -10,12 +10,12 @@ namespace Ranger.Services.Geofences
         {
             if (string.IsNullOrWhiteSpace(deviceId))
             {
-                throw new ArgumentException($"{nameof(deviceId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(deviceId)} was null or whitespace");
             }
 
             if (string.IsNullOrWhiteSpace(externalUserId))
             {
-                throw new ArgumentException($"{nameof(externalUserId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(externalUserId)} was null or whitespace");
             }
 
             this.DeviceId = deviceId;

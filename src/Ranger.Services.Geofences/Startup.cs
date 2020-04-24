@@ -132,10 +132,10 @@ namespace Ranger.Services.Geofences
 
         private void InitializeMongoDb(IApplicationBuilder app, ILogger<Startup> logger)
         {
-            logger.LogInformation("Initializing MongoDB.");
+            logger.LogInformation("Initializing MongoDB");
             var mongoInitializer = app.ApplicationServices.GetService<IMongoDbInitializer>();
             mongoInitializer.Initialize();
-            logger.LogInformation("MongoDB Initialized.");
+            logger.LogInformation("MongoDB Initialized");
         }
     }
 }

@@ -58,12 +58,12 @@ namespace Ranger.Services.Geofences
             catch (MongoWriteException ex)
             {
                 logger.LogError(ex, "Failed to upsert geofence");
-                throw new RangerException("An unspecified error occurred.", ex);
+                throw new RangerException("An unspecified error occurred", ex);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to upsert geofence");
-                throw new RangerException("An unspecified error occurred.", ex);
+                throw new RangerException("An unspecified error occurred", ex);
             }
         }
     }

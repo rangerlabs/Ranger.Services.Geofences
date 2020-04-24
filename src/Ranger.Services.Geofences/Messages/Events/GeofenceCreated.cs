@@ -14,11 +14,11 @@ namespace Ranger.Services.Geofences
         {
             if (string.IsNullOrWhiteSpace(tomain))
             {
-                throw new System.ArgumentException($"{nameof(tomain)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tomain)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
-                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace");
             }
 
             this.TenantId = tomain;

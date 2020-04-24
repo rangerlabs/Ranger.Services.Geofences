@@ -13,15 +13,15 @@ namespace Ranger.Services.Geofences
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
-                throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
-                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace");
             }
 
             this.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;

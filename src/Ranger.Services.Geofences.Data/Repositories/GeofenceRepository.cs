@@ -37,11 +37,11 @@ namespace Ranger.Services.Geofences.Data
         {
             if (geofence is null)
             {
-                throw new ArgumentNullException($"{nameof(geofence)} was null.");
+                throw new ArgumentNullException($"{nameof(geofence)} was null");
             }
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
-                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
             await geofenceCollection.InsertOneAsync(geofence);
             await insertCreatedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
@@ -51,17 +51,17 @@ namespace Ranger.Services.Geofences.Data
         {
             if (geofence is null)
             {
-                throw new ArgumentNullException($"{nameof(geofence)} was null.");
+                throw new ArgumentNullException($"{nameof(geofence)} was null");
             }
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
-                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
 
             var currentGeofence = await this.GetGeofenceAsync(geofence.TenantId, geofence.ProjectId, geofence.Id);
             if (currentGeofence is null)
             {
-                throw new RangerException($"A geofence could not be found for the provided Id '{geofence.Id}'.");
+                throw new RangerException($"A geofence could not be found for the provided Id '{geofence.Id}'");
             }
 
             await geofenceCollection.ReplaceOneAsync(
@@ -77,22 +77,22 @@ namespace Ranger.Services.Geofences.Data
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
-                throw new ArgumentException($"{nameof(externalId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(externalId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
-                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
 
             var geofence = await GetGeofenceAsync(tenantId, projectId, externalId);
 
             if (geofence is null)
             {
-                throw new RangerException($"A geofence could not be found for the provided externalId '{externalId}'.");
+                throw new RangerException($"A geofence could not be found for the provided externalId '{externalId}'");
             }
 
             await geofenceCollection.DeleteOneAsync(
@@ -272,7 +272,7 @@ namespace Ranger.Services.Geofences.Data
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
             var geofences = await geofenceCollection.Aggregate()

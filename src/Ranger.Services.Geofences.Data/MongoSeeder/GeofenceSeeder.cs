@@ -24,12 +24,12 @@ namespace Ranger.Services.Geofences.Data
         {
             await GeofenceCollectionIndices();
             await GeofenceChangeLogCollectionIndices();
-            logger.LogInformation($"Indices added successfully.");
+            logger.LogInformation($"Indices added successfully");
         }
 
         private async Task GeofenceChangeLogCollectionIndices()
         {
-            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceChangeLogCollection} collection.");
+            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceChangeLogCollection} collection");
             try
             {
                 IList<CreateIndexModel<GeofenceChangeLog>> indexModels = new List<CreateIndexModel<GeofenceChangeLog>>();
@@ -38,14 +38,14 @@ namespace Ranger.Services.Geofences.Data
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceChangeLogCollection} collection.");
+                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceChangeLogCollection} collection");
                 throw;
             }
         }
 
         private async Task GeofenceCollectionIndices()
         {
-            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceCollection} collection.");
+            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceCollection} collection");
             try
             {
                 IList<CreateIndexModel<Geofence>> indexModels = new List<CreateIndexModel<Geofence>>();
@@ -57,7 +57,7 @@ namespace Ranger.Services.Geofences.Data
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceCollection} collection.");
+                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceCollection} collection");
                 throw;
             }
         }

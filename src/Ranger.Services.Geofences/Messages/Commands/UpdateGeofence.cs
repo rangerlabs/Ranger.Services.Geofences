@@ -31,24 +31,24 @@ namespace Ranger.Services.Geofences
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
             {
-                throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
-                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace");
             }
 
             if (coordinates is null)
             {
-                throw new System.ArgumentException($"{nameof(coordinates)} was null.");
+                throw new System.ArgumentException($"{nameof(coordinates)} was null");
             }
             if (coordinates.Count() == 0)
             {
-                throw new ArgumentOutOfRangeException($"{nameof(coordinates)} must not be empty.");
+                throw new ArgumentOutOfRangeException($"{nameof(coordinates)} must not be empty");
             }
 
             this.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;

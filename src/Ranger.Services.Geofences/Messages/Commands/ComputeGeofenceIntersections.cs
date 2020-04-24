@@ -16,11 +16,11 @@ namespace Ranger.Services.Geofences
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (projectId.Equals(Guid.Empty))
             {
-                throw new ArgumentException($"{nameof(projectId)} was an empty Guid.");
+                throw new ArgumentException($"{nameof(projectId)} was an empty Guid");
             }
 
             this.TenantId = tenantId;
