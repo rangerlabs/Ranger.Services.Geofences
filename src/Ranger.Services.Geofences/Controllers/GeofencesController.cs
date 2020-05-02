@@ -22,16 +22,18 @@ namespace Ranger.Services.Geofences.Controllers
         private readonly IGeofenceRepository geofenceRepository;
         private readonly TenantsHttpClient tenantsClient;
         private readonly ILogger<GeofencesController> logger;
+        private readonly ProjectsHttpClient projectsHttpClient;
 
-        public GeofencesController(IGeofenceRepository geofenceRepository, TenantsHttpClient tenantsClient, ILogger<GeofencesController> logger)
+        public GeofencesController(IGeofenceRepository geofenceRepository, ProjectsHttpClient projectsHttpClient, TenantsHttpClient tenantsClient, ILogger<GeofencesController> logger)
         {
+            this.projectsHttpClient = projectsHttpClient;
             this.geofenceRepository = geofenceRepository;
             this.tenantsClient = tenantsClient;
             this.logger = logger;
         }
 
         ///<summary>
-        /// Updates an existing project
+        /// Get all geofences for a specified project id
         ///</summary>
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
         ///<param name="projectId">The project id to retrieve geofences for</param>
@@ -71,6 +73,28 @@ namespace Ranger.Services.Geofences.Controllers
             catch (Exception ex)
             {
                 var message = "An error occurred retrieving geofences";
+                this.logger.LogError(ex, message);
+                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        ///<summary>
+        /// Get all geofences that are in use by an active project
+        ///</summary>
+        ///<param name="tenantId">The tenant id to retrieve geofences for</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/geofences/{tenantId}/count")]
+        public async Task<ApiResponse> GetAllActiveGeofences(string tenantId)
+        {
+            var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId);
+            try
+            {
+                var geofences = await geofenceRepository.GetAllActiveGeofencesCountAsync(tenantId, projects.Result.Select(p => p.ProjectId));
+                return new ApiResponse("Successfully calculated active geofences", geofences);
+            }
+            catch (Exception ex)
+            {
+                var message = "An error occurred retrieving active geofences count";
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -15,18 +16,30 @@ namespace Ranger.Services.Geofences
     {
         private readonly IBusPublisher busPublisher;
         private readonly IGeofenceRepository repository;
+        private readonly SubscriptionsHttpClient subscriptionsHttpClient;
+        private readonly ProjectsHttpClient projectsHttpClient;
         private readonly TenantsHttpClient tenantsClient;
         private readonly ILogger<CreateGeofenceHandler> logger;
 
-        public CreateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, ILogger<CreateGeofenceHandler> logger)
+        public CreateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, SubscriptionsHttpClient subscriptionsHttpClient, ProjectsHttpClient projectsHttpClient, ILogger<CreateGeofenceHandler> logger)
         {
             this.logger = logger;
             this.busPublisher = busPublisher;
             this.repository = repository;
+            this.subscriptionsHttpClient = subscriptionsHttpClient;
+            this.projectsHttpClient = projectsHttpClient;
         }
 
         public async Task HandleAsync(CreateGeofence command, ICorrelationContext context)
         {
+            var limitsApiResponse = await subscriptionsHttpClient.GetLimitDetails<SubscriptionLimitDetails>(command.TenantId);
+            var projectsApiResult = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(command.TenantId);
+            var currentActiveGeofenceCount = await repository.GetAllActiveGeofencesCountAsync(command.TenantId, projectsApiResult.Result.Select(p => p.ProjectId));
+            if (currentActiveGeofenceCount >= limitsApiResponse.Result.Limit.Geofences)
+            {
+                throw new RangerException("Subscription limit met");
+            }
+
             var geofence = new Geofence(Guid.NewGuid(), command.TenantId);
             geofence.ExternalId = command.ExternalId;
             geofence.ProjectId = command.ProjectId;

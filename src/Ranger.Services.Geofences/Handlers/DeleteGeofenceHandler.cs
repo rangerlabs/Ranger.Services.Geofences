@@ -34,15 +34,11 @@ namespace Ranger.Services.Geofences
             {
                 throw;
             }
-            catch (MongoException ex)
-            {
-                logger.LogError(ex, "Failed to delete geofence");
-                throw new RangerException("An unspecified error occurred", ex);
-            }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete geofence");
-                throw new RangerException("An unspecified error occurred", ex);
+                var message = "Failed to delete geofence";
+                logger.LogError(ex, message);
+                throw new RangerException(message, ex);
             }
         }
     }

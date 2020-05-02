@@ -118,12 +118,26 @@ namespace Ranger.Services.Geofences.Data
                 .FirstOrDefaultAsync();
         }
 
+        public async Task PurgeIntegrationFromAllGeofences(string tenantId, Guid projectId, Guid integrationId)
+        {
+            var pullFilter = Builders<Geofence>.Update.PullAll(f => f.IntegrationIds, new Guid[] { integrationId });
+            var result = await geofenceCollection.UpdateManyAsync(g => g.TenantId == tenantId && g.ProjectId == projectId, pullFilter);
+        }
 
         public async Task<IEnumerable<Geofence>> GetGeofencesAsync(string tenantId, Guid projectId, IEnumerable<Guid> geofenceIds)
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && geofenceIds.Contains(g.Id))
                 .ToListAsync();
+        }
+
+        public async Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds)
+        {
+            var result = await geofenceCollection.Aggregate()
+                .Match(g => g.TenantId == tenantId && projectIds.Contains(g.ProjectId))
+                .Count()
+                .SingleAsync();
+            return result.Count;
         }
 
         public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy)
