@@ -18,7 +18,6 @@ namespace Ranger.Services.Geofences
         private readonly IGeofenceRepository repository;
         private readonly SubscriptionsHttpClient subscriptionsHttpClient;
         private readonly ProjectsHttpClient projectsHttpClient;
-        private readonly TenantsHttpClient tenantsClient;
         private readonly ILogger<CreateGeofenceHandler> logger;
 
         public CreateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, SubscriptionsHttpClient subscriptionsHttpClient, ProjectsHttpClient projectsHttpClient, ILogger<CreateGeofenceHandler> logger)

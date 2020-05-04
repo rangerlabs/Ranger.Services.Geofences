@@ -23,6 +23,8 @@ using Ranger.InternalHttpClient;
 using Ranger.Mongo;
 using Ranger.RabbitMQ;
 using Ranger.Services.Geofences.Data;
+using Ranger.Services.Geofences.Messages.Commands;
+using Ranger.Services.Geofences.Messages.RejectedEvents;
 
 namespace Ranger.Services.Geofences
 {
@@ -121,8 +123,12 @@ namespace Ranger.Services.Geofences
                 .SubscribeCommand<DeleteGeofence>((c, e) =>
                     new DeleteGeofenceRejected(e.Message, "")
                 )
+                .SubscribeCommand<PurgeIntegrationFromGeofences>((c, e) =>
+                    new PurgeIntegrationFromGeofencesRejected(e.Message, "")
+                )
                 .SubscribeCommand<ComputeGeofenceIntersections>()
-                .SubscribeCommand<ComputeGeofenceIntegrations>();
+                .SubscribeCommand<ComputeGeofenceIntersections>()
+                .SubscribeCommand<EnforceGeofenceResourceLimits>();
 
             this.InitializeMongoDb(app, logger);
         }

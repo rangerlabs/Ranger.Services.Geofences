@@ -136,8 +136,8 @@ namespace Ranger.Services.Geofences.Data
             var result = await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && projectIds.Contains(g.ProjectId))
                 .Count()
-                .SingleAsync();
-            return result.Count;
+                .SingleOrDefaultAsync();
+            return result?.Count ?? 0;
         }
 
         public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy)

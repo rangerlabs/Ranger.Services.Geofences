@@ -72,7 +72,7 @@ namespace Ranger.Services.Geofences.Controllers
             }
             catch (Exception ex)
             {
-                var message = "An error occurred retrieving geofences";
+                var message = "Failed to retrieve geofences";
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
@@ -94,7 +94,7 @@ namespace Ranger.Services.Geofences.Controllers
             }
             catch (Exception ex)
             {
-                var message = "An error occurred retrieving active geofences count";
+                var message = "Failed to retrieve active geofences count";
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
