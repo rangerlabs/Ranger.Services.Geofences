@@ -17,5 +17,6 @@ namespace Ranger.Services.Geofences.Data
         Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy = 0);
         Task PurgeIntegrationFromAllGeofences(string tenantId, Guid projectId, Guid integrationId);
         Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds);
+        Task<IEnumerable<Geofence>> GetAllActiveGeofencesForProjectIdsAsync(string tenantId, IEnumerable<Guid> projectIds);
     }
 }

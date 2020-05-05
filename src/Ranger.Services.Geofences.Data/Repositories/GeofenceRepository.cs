@@ -140,6 +140,13 @@ namespace Ranger.Services.Geofences.Data
             return result?.Count ?? 0;
         }
 
+        public async Task<IEnumerable<Geofence>> GetAllActiveGeofencesForProjectIdsAsync(string tenantId, IEnumerable<Guid> projectIds)
+        {
+            return await geofenceCollection.Aggregate()
+                .Match(g => g.TenantId == tenantId && projectIds.Contains(g.ProjectId))
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy)
         {
             var circularLookup = new BsonDocument{
