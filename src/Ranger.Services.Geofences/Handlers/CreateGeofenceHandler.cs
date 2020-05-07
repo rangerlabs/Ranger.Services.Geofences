@@ -31,12 +31,16 @@ namespace Ranger.Services.Geofences
 
         public async Task HandleAsync(CreateGeofence command, ICorrelationContext context)
         {
-            var limitsApiResponse = await subscriptionsHttpClient.GetLimitDetails<SubscriptionLimitDetails>(command.TenantId);
+            var limitsApiResponse = await subscriptionsHttpClient.GetSubscription<SubscriptionLimitDetails>(command.TenantId);
             var projectsApiResult = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(command.TenantId);
             var currentActiveGeofenceCount = await repository.GetAllActiveGeofencesCountAsync(command.TenantId, projectsApiResult.Result.Select(p => p.ProjectId));
             if (currentActiveGeofenceCount >= limitsApiResponse.Result.Limit.Geofences)
             {
                 throw new RangerException("Subscription limit met");
+            }
+            if (!limitsApiResponse.Result.Active)
+            {
+                throw new RangerException("Subscription is inactive");
             }
 
             var geofence = new Geofence(Guid.NewGuid(), command.TenantId);

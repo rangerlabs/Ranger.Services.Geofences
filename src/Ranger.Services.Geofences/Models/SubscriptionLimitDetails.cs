@@ -4,6 +4,7 @@ namespace Ranger.Services.Geofences
     {
         public string PlanId { get; set; }
         public LimitFields Limit { get; set; }
+        public bool Active { get; set; }
     }
     public class LimitFields
     {
