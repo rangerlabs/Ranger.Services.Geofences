@@ -8,17 +8,24 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using NodaTime;
+using NodaTime.Serialization.JsonNet;
+using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Mongo;
+using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Geofences.Data;
+using Ranger.Services.Geofences.Messages.Commands;
+using Ranger.Services.Geofences.Messages.RejectedEvents;
 
 namespace Ranger.Services.Geofences
 {
@@ -45,22 +52,18 @@ namespace Ranger.Services.Geofences
                 {
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                    options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
                 });
+            services.AddAutoWrapper();
+            services.AddSwaggerGen("Geofences API", "v1");
+            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("geofencesApi", policyBuilder =>
-                    {
-                        policyBuilder.RequireScope("geofencesApi");
-                    });
-            });
+            services.AddPollyPolicyRegistry();
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
+            services.AddProjectsHttpClient("http://projects:8086", "projectsApi", "usGwT8Qsp4La2");
+            services.AddSubscriptionsHttpClient("http://subscriptions:8089", "subscriptionsApi", "4T3SXqXaD6GyGHn4RY");
 
-            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
-            {
-                return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
-            });
-
-            services.AddEntityFrameworkNpgsql().AddDbContext<GeofencesDbContext>(options =>
+            services.AddDbContext<GeofencesDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },
@@ -77,7 +80,6 @@ namespace Ranger.Services.Geofences
                 {
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "geofencesApi";
-
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -85,6 +87,10 @@ namespace Ranger.Services.Geofences
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<GeofencesDbContext>();
 
+            services.AddLiveHealthCheck();
+            services.AddEntityFrameworkHealthCheck<GeofencesDbContext>();
+            services.AddDockerImageTagHealthCheck();
+            services.AddRabbitMQHealthCheck();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -100,11 +106,22 @@ namespace Ranger.Services.Geofences
             var logger = loggerFactory.CreateLogger<Startup>();
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
+            app.UseSwagger("v1", "Geofences API");
+            app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks();
+                endpoints.MapLiveTagHealthCheck();
+                endpoints.MapEfCoreTagHealthCheck();
+                endpoints.MapDockerImageTagHealthCheck();
+                endpoints.MapRabbitMQHealthCheck();
             });
 
             this.busSubscriber = app.UseRabbitMQ()
@@ -116,9 +133,13 @@ namespace Ranger.Services.Geofences
                 )
                 .SubscribeCommand<DeleteGeofence>((c, e) =>
                     new DeleteGeofenceRejected(e.Message, "")
-                );
-            ;
-
+                )
+                .SubscribeCommand<PurgeIntegrationFromGeofences>((c, e) =>
+                    new PurgeIntegrationFromGeofencesRejected(e.Message, "")
+                )
+                .SubscribeCommand<ComputeGeofenceIntersections>()
+                .SubscribeCommand<ComputeGeofenceIntersections>()
+                .SubscribeCommand<EnforceGeofenceResourceLimits>();
 
             this.InitializeMongoDb(app, logger);
         }
@@ -130,10 +151,10 @@ namespace Ranger.Services.Geofences
 
         private void InitializeMongoDb(IApplicationBuilder app, ILogger<Startup> logger)
         {
-            logger.LogInformation("Initializing MongoDB.");
+            logger.LogInformation("Initializing MongoDB");
             var mongoInitializer = app.ApplicationServices.GetService<IMongoDbInitializer>();
             mongoInitializer.Initialize();
-            logger.LogInformation("MongoDB Initialized.");
+            logger.LogInformation("MongoDB Initialized");
         }
     }
 }

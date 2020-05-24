@@ -19,7 +19,7 @@ namespace Ranger.Services.Geofences
             var area = s2AreaCentroid.Area * S2LatLng.EarthRadiusMeters * S2LatLng.EarthRadiusMeters;
             if (area < 10000)
             {
-                throw new RangerException("Polygon geofences must enclose an area greater than 10,000 meters.");
+                throw new RangerException("Polygon geofences must enclose an area greater than 10,000 meters");
             }
             var centroid = new S2LatLng(s2Polygon.Centroid.Value);
             return GeoJson.Point<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(centroid.LngDegrees, centroid.LatDegrees));

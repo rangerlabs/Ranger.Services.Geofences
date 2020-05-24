@@ -5,7 +5,7 @@ namespace Ranger.Services.Geofences.Data
 {
     public class GeofenceChangeLog : BaseMultitenantEntity
     {
-        public GeofenceChangeLog(Guid id, string pgsqlDatabaseUsername) : base(id, pgsqlDatabaseUsername)
+        public GeofenceChangeLog(Guid id, string tenantId) : base(id, tenantId)
         { }
 
         public Guid GeofenceId { get; set; }

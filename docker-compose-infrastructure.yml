@@ -19,11 +19,13 @@ services:
         environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=mongo
+            - MONGO_INITDB_DATABASE=geofences
         ports:
             - '27017:27017'
         networks:
             - geofences
         volumes:
+            - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
             - mongo:/data/db
 
 networks:
@@ -33,6 +35,8 @@ networks:
 
 volumes:
     postgres:
+        driver: local
+    init-mongo.js:
         driver: local
     mongo:
         driver: local

@@ -24,40 +24,40 @@ namespace Ranger.Services.Geofences.Data
         {
             await GeofenceCollectionIndices();
             await GeofenceChangeLogCollectionIndices();
-            logger.LogInformation($"Indices added successfully.");
+            logger.LogInformation($"Indices added successfully");
         }
 
         private async Task GeofenceChangeLogCollectionIndices()
         {
-            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceChangeLogCollection} collection.");
+            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceChangeLogCollection} collection");
             try
             {
                 IList<CreateIndexModel<GeofenceChangeLog>> indexModels = new List<CreateIndexModel<GeofenceChangeLog>>();
-                indexModels.Add(new CreateIndexModel<GeofenceChangeLog>(Builders<GeofenceChangeLog>.IndexKeys.Ascending(_ => _.PgsqlDatabaseUsername).Ascending(_ => _.ProjectId).Ascending(_ => _.GeofenceId)));
+                indexModels.Add(new CreateIndexModel<GeofenceChangeLog>(Builders<GeofenceChangeLog>.IndexKeys.Ascending(_ => _.TenantId).Ascending(_ => _.ProjectId).Ascending(_ => _.GeofenceId)));
                 await geofenceChangeLogsCollection.Indexes.CreateManyAsync(indexModels);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceChangeLogCollection} collection.");
+                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceChangeLogCollection} collection");
                 throw;
             }
         }
 
         private async Task GeofenceCollectionIndices()
         {
-            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceCollection} collection.");
+            logger.LogInformation($"Adding indices to {CollectionNames.GeofenceCollection} collection");
             try
             {
                 IList<CreateIndexModel<Geofence>> indexModels = new List<CreateIndexModel<Geofence>>();
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.Shape)));
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Geo2DSphere(_ => _.GeoJsonGeometry)));
                 indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.ProjectId).Ascending(_ => _.ExternalId), new CreateIndexOptions() { Unique = true }));
-                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.PgsqlDatabaseUsername).Ascending(_ => _.ProjectId)));
+                indexModels.Add(new CreateIndexModel<Geofence>(Builders<Geofence>.IndexKeys.Ascending(_ => _.TenantId).Ascending(_ => _.ProjectId)));
                 await geofencesCollection.Indexes.CreateManyAsync(indexModels);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceCollection} collection.");
+                logger.LogError(ex, $"Failed to add indices to {CollectionNames.GeofenceCollection} collection");
                 throw;
             }
         }

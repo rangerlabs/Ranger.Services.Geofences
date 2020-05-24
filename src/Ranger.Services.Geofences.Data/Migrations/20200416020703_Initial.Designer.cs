@@ -9,7 +9,7 @@ using Ranger.Services.Geofences.Data;
 namespace Ranger.Services.Geofences.Data.Migrations
 {
     [DbContext(typeof(GeofencesDbContext))]
-    [Migration("20200131194550_Initial")]
+    [Migration("20200416020703_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

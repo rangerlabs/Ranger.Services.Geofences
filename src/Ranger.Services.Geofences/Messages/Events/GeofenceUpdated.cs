@@ -6,22 +6,22 @@ namespace Ranger.Services.Geofences
     [MessageNamespaceAttribute("geofences")]
     public class GeofenceUpdated : IEvent
     {
-        public string Domain { get; }
+        public string TenantId { get; }
         public string ExternalId { get; }
         public Guid Id { get; }
 
-        public GeofenceUpdated(string domain, string externalId, Guid id)
+        public GeofenceUpdated(string tenantId, string externalId, Guid id)
         {
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(externalId))
             {
-                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(externalId)} was null or whitespace");
             }
 
-            this.Domain = domain;
+            this.TenantId = tenantId;
             this.ExternalId = externalId;
             this.Id = id;
         }
