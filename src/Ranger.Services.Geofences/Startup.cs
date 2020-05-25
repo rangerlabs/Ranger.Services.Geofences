@@ -58,10 +58,11 @@ namespace Ranger.Services.Geofences
             services.AddSwaggerGen("Geofences API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
+            var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();
-            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
-            services.AddProjectsHttpClient("http://projects:8086", "projectsApi", "usGwT8Qsp4La2");
-            services.AddSubscriptionsHttpClient("http://subscriptions:8089", "subscriptionsApi", "4T3SXqXaD6GyGHn4RY");
+            services.AddTenantsHttpClient("http://tenants:8082", identityAuthority, "tenantsApi", "cKprgh9wYKWcsm");
+            services.AddProjectsHttpClient("http://projects:8086", identityAuthority, "projectsApi", "usGwT8Qsp4La2");
+            services.AddSubscriptionsHttpClient("http://subscriptions:8089", identityAuthority, "subscriptionsApi", "4T3SXqXaD6GyGHn4RY");
 
             services.AddDbContext<GeofencesDbContext>(options =>
             {
