@@ -85,7 +85,9 @@ namespace Ranger.Services.Geofences
                 });
 
             services.AddDataProtection()
+                .SetApplicationName("Geofences")
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<GeofencesDbContext>();
 
             services.AddLiveHealthCheck();
