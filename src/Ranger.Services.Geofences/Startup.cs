@@ -140,7 +140,7 @@ namespace Ranger.Services.Geofences
                 .SubscribeCommand<PurgeIntegrationFromGeofences>((c, e) =>
                     new PurgeIntegrationFromGeofencesRejected(e.Message, "")
                 )
-                .SubscribeCommand<ComputeGeofenceIntersections>()
+                .SubscribeCommand<ComputeGeofenceIntegrations>()
                 .SubscribeCommand<ComputeGeofenceIntersections>()
                 .SubscribeCommand<EnforceGeofenceResourceLimits>();
 
@@ -157,7 +157,6 @@ namespace Ranger.Services.Geofences
             logger.LogInformation("Initializing MongoDB");
             var mongoInitializer = app.ApplicationServices.GetService<IMongoDbInitializer>();
             mongoInitializer.Initialize();
-            logger.LogInformation("MongoDB Initialized");
         }
     }
 }
