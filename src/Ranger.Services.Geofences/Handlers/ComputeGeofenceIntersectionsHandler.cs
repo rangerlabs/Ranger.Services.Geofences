@@ -30,6 +30,7 @@ namespace Ranger.Services.Geofences.Handlers
                 busPublisher.Send(new ComputeGeofenceEvents(
                     message.TenantId,
                     message.ProjectId,
+                    message.ProjectName,
                     message.Environment,
                     message.Breadcrumb,
                     geofenceIntersectionIds

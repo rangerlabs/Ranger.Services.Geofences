@@ -44,7 +44,7 @@ namespace Ranger.Services.Geofences
 
                 if (geofenceIntegrationResults.Any())
                 {
-                    busPublisher.Send(new ExecuteGeofenceIntegrations(message.TenantId, message.ProjectId, message.Environment, message.Breadcrumb, geofenceIntegrationResults), context);
+                    busPublisher.Send(new ExecuteGeofenceIntegrations(message.TenantId, message.ProjectId, message.ProjectName, message.Environment, message.Breadcrumb, geofenceIntegrationResults), context);
                 }
             }
             catch (Exception ex)
