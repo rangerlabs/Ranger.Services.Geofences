@@ -153,7 +153,7 @@ namespace Ranger.Services.Geofences.Data
                 {"$lookup", new BsonDocument{
                     {"from", "geofences"},
                     {"let", new BsonDocument{}},
-                    {"pipeline", GetCircularSubPipeline(tenantId, lngLat)},
+                    {"pipeline", GetCircularSubPipeline(tenantId, projectId, lngLat)},
                     {"as", "CircularMatches"}
                 }}
             };
@@ -161,7 +161,7 @@ namespace Ranger.Services.Geofences.Data
                 {"$lookup", new BsonDocument{
                     {"from", "geofences"},
                     {"let", new BsonDocument{}},
-                    {"pipeline", GetPolygonSubPipeline(tenantId, lngLat)},
+                    {"pipeline", GetPolygonSubPipeline(tenantId, projectId, lngLat)},
                     {"as", "PolygonMatches"}
                 }}
             };
@@ -184,7 +184,7 @@ namespace Ranger.Services.Geofences.Data
             return intersectingGeofences;
         }
 
-        private static BsonArray GetCircularSubPipeline(string tenantId, LngLat lngLat, double accuracy = 0)
+        private static BsonArray GetCircularSubPipeline(string tenantId, Guid projectId, LngLat lngLat, double accuracy = 0)
         {
             var circularSubPipeline = new BsonArray();
             circularSubPipeline.Add(
@@ -237,7 +237,8 @@ namespace Ranger.Services.Geofences.Data
                         {"CalculatedDiff", new BsonDocument{
                             {"$lte", 0}
                         }},
-                        {"TenantId", tenantId}
+                        {"TenantId", tenantId},
+                        {"ProjectId", projectId}
                     }}});
 
             circularSubPipeline.Add(
@@ -269,7 +270,7 @@ namespace Ranger.Services.Geofences.Data
             return circularSubPipeline;
         }
 
-        private static BsonArray GetPolygonSubPipeline(string tenantId, LngLat lngLat)
+        private static BsonArray GetPolygonSubPipeline(string tenantId, Guid projectId, LngLat lngLat)
         {
             var polygonSubPipeline = new BsonArray();
             polygonSubPipeline.Add(
@@ -283,7 +284,8 @@ namespace Ranger.Services.Geofences.Data
                                 }}
                             }}
                         }},
-                        {"TenantId", tenantId}
+                        {"TenantId", tenantId},
+                        {"ProjectId", projectId}
                     }}
                 });
             return polygonSubPipeline;
