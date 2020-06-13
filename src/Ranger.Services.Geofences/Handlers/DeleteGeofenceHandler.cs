@@ -30,15 +30,10 @@ namespace Ranger.Services.Geofences
                 await repository.DeleteGeofence(command.TenantId, command.ProjectId, command.ExternalId, command.CommandingUserEmailOrTokenPrefix);
                 busPublisher.Publish(new GeofenceDeleted(command.TenantId, command.ExternalId), CorrelationContext.FromId(context.CorrelationContextId));
             }
-            catch (RangerException)
-            {
-                throw;
-            }
             catch (Exception ex)
             {
-                var message = "Failed to delete geofence";
-                logger.LogError(ex, message);
-                throw new RangerException(message, ex);
+                logger.LogError(ex, "An unexpected error occurred deleting geofence {ExternalId}", command.ExternalId);
+                throw new RangerException($"An unexpected error occurred deleting geofence '{command.ExternalId}'");
             }
         }
     }

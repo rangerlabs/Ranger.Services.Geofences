@@ -39,6 +39,7 @@ namespace Ranger.Services.Geofences.Handlers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to compute intersecting geofences");
+                throw;
             }
         }
     }
