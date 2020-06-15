@@ -34,7 +34,7 @@
     <PackageReference Include="Ranger.RabbitMQ" version="3.2.2" />
     <PackageReference Include="S2Geometry" Version="1.0.3" />
     <PackageReference Include="Ranger.ApiUtilities" Version="3.3.3" />
-    <PackageReference Include="Ranger.InternalHttpClient" Version="4.8.4" />
+    <PackageReference Include="Ranger.InternalHttpClient" Version="4.8.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Geofences.Data\Ranger.Services.Geofences.Data.csproj" />
