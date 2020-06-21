@@ -28,7 +28,7 @@ namespace Ranger.Services.Geofences
                 var geofences = await geofenceRepository.GetGeofencesAsync(message.TenantId, message.ProjectId, message.BreadcrumbGeofenceResults.Select(b => b.GeofenceId));
                 var geofenceIntegrationResults = geofences.Where(g =>
                         g.Enabled &&
-                        g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime()) &&
+                        g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime(), logger) &&
                         IsConstructed(g, message.Breadcrumb.RecordedAt) &&
                         IsTriggerRequested(g, message.BreadcrumbGeofenceResults.Single(b => b.GeofenceId == g.Id).GeofenceEvent)
                     ).Select(g =>
