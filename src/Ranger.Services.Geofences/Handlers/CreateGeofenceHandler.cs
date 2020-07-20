@@ -74,7 +74,7 @@ namespace Ranger.Services.Geofences
                 {
                     throw new RangerException($"A geofence with the ExternalId '{command.ExternalId}' already exists", ex);
                 }
-                logger.LogError(ex, "An unexpected error occurred creating geofence {ExternalId}", command.ExternalId);
+                logger.LogError(ex, "An unexpected error occurred creating geofence {ExternalId} with {Code}", command.ExternalId, ex.WriteError.Code);
                 throw new RangerException($"An unexpected error occurred creating geofence '{command.ExternalId}'");
             }
             catch (Exception ex)
