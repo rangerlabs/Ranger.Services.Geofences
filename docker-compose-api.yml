@@ -6,14 +6,9 @@ services:
         ports:
             - '8085:8085'
         networks:
-            - geofences
             - ranger
 
 networks:
     ranger:
         name: ranger-network
-        external: true
-
-    geofences:
-        name: geofences-network
         external: true
