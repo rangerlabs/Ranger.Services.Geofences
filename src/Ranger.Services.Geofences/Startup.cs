@@ -56,9 +56,10 @@ namespace Ranger.Services.Geofences
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
                 });
-            services.AddAutoWrapper();
+
+            services.AddRangerApiVersioning();
+            services.ConfigureAutoWrapperModelStateResponseFactory();
             services.AddSwaggerGen("Geofences API", "v1");
-            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
             var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();
