@@ -64,6 +64,7 @@ namespace Ranger.Services.Geofences.Data
                 throw new RangerException($"A geofence could not be found for the provided Id '{geofence.Id}'");
             }
 
+            geofence.SetCreatedDate(currentGeofence.CreatedDate);
             await geofenceCollection.ReplaceOneAsync(
                 (_) => _.TenantId == geofence.TenantId && _.ProjectId == geofence.ProjectId && _.Id == geofence.Id,
                 geofence
