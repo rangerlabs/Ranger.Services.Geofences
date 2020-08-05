@@ -27,24 +27,27 @@ namespace Ranger.Services.Geofences
         public async Task HandleAsync(UpdateGeofence command, ICorrelationContext context)
         {
 
-            var geofence = new Geofence(command.Id, command.TenantId);
-            geofence.ExternalId = command.ExternalId;
-            geofence.ProjectId = command.ProjectId;
-            geofence.Description = String.IsNullOrWhiteSpace(command.Description) ? "" : command.Description;
-            geofence.Enabled = command.Enabled;
-            geofence.ExpirationDate = command.ExpirationDate ?? DateTime.MaxValue;
-            geofence.GeoJsonGeometry = GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates);
-            geofence.PolygonCentroid = command.Shape == GeofenceShapeEnum.Polygon ? Utilities.GetPolygonCentroid(command.Coordinates) : null;
-            geofence.Labels = command.Labels ?? new List<string>();
-            geofence.IntegrationIds = command.IntegrationIds ?? new List<Guid>();
-            geofence.LaunchDate = command.LaunchDate ?? DateTime.MinValue;
-            geofence.Metadata = command.Metadata ?? new List<KeyValuePair<string, string>>();
-            geofence.OnEnter = command.OnEnter;
-            geofence.OnDwell = command.OnDwell;
-            geofence.OnExit = command.OnExit;
-            geofence.Radius = command.Radius;
-            geofence.Schedule = command.Schedule ?? Schedule.FullUtcSchedule;
-            geofence.Shape = command.Shape;
+            var geofence = new Geofence(
+                command.Id,
+                command.TenantId,
+                command.Shape,
+                GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates),
+                command.IntegrationIds ?? new List<Guid>(),
+                command.Radius,
+                command.ExternalId,
+                command.ProjectId,
+                String.IsNullOrWhiteSpace(command.Description) ? "" : command.Description,
+                command.OnEnter,
+                command.OnDwell,
+                command.OnExit,
+                command.Enabled,
+                command.Shape == GeofenceShapeEnum.Polygon ? Utilities.GetPolygonCentroid(command.Coordinates) : null,
+                command.Metadata ?? new List<KeyValuePair<string, string>>(),
+                command.Labels ?? new List<string>(),
+                command.ExpirationDate,
+                command.LaunchDate,
+                command.Schedule
+            );
 
             try
             {
