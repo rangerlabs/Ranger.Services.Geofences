@@ -54,7 +54,19 @@ namespace Ranger.Services.Geofences
             }
         }
 
-        private bool IsConstructed(Geofence geofence, DateTime datetime) => geofence.LaunchDate <= datetime && datetime <= geofence.ExpirationDate;
+        private bool IsConstructed(Geofence geofence, DateTime datetime)
+        {
+            if (geofence.LaunchDate <= datetime && datetime <= geofence.ExpirationDate)
+            {
+                logger.LogDebug("Determined recordedAt date was between LaunchDate and ExpirationDate");
+                return true;
+            }
+            else
+            {
+                logger.LogDebug("Determined recordedAt date was NOT between LaunchDate and ExpirationDate");
+                return false;
+            }
+        }
         private bool IsTriggerRequested(Geofence geofence, GeofenceEventEnum geofenceEvent)
         {
             if ((geofenceEvent is GeofenceEventEnum.ENTERED && geofence.OnEnter)
