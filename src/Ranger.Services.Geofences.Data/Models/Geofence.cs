@@ -102,6 +102,7 @@ namespace Ranger.Services.Geofences.Data
             {
                 throw new ArgumentException($"'{nameof(createdDate)}' must be less than UpdateDate");
             }
+            CreatedDate = createdDate;
         }
     }
 }

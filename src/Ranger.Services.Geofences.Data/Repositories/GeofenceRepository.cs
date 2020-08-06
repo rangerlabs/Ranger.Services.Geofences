@@ -90,7 +90,6 @@ namespace Ranger.Services.Geofences.Data
             }
 
             var geofence = await GetGeofenceAsync(tenantId, projectId, externalId);
-
             if (geofence is null)
             {
                 throw new RangerException($"A geofence could not be found for the provided externalId '{externalId}'");
