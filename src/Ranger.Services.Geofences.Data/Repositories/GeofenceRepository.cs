@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JsonDiffPatchDotNet;
 using Microsoft.Extensions.Logging;
@@ -101,21 +102,21 @@ namespace Ranger.Services.Geofences.Data
             await insertDeletedChangeLog(tenantId, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, string externalId)
+        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && g.ExternalId == externalId)
                 .As<Geofence>()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, Guid geofenceId)
+        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, Guid geofenceId, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && g.Id == geofenceId)
                 .As<Geofence>()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task PurgeIntegrationFromAllGeofences(string tenantId, Guid projectId, Guid integrationId)
@@ -124,30 +125,30 @@ namespace Ranger.Services.Geofences.Data
             var result = await geofenceCollection.UpdateManyAsync(g => g.TenantId == tenantId && g.ProjectId == projectId, pullFilter);
         }
 
-        public async Task<IEnumerable<Geofence>> GetGeofencesAsync(string tenantId, Guid projectId, IEnumerable<Guid> geofenceIds)
+        public async Task<IEnumerable<Geofence>> GetGeofencesAsync(string tenantId, Guid projectId, IEnumerable<Guid> geofenceIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && geofenceIds.Contains(g.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds)
+        public async Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             var result = await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && projectIds.Contains(g.ProjectId))
                 .Count()
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(cancellationToken);
             return result?.Count ?? 0;
         }
 
-        public async Task<IEnumerable<Geofence>> GetAllActiveGeofencesForProjectIdsAsync(string tenantId, IEnumerable<Guid> projectIds)
+        public async Task<IEnumerable<Geofence>> GetAllActiveGeofencesForProjectIdsAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && projectIds.Contains(g.ProjectId))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy)
+        public async Task<IEnumerable<Geofence>> GetGeofencesContainingLocation(string tenantId, Guid projectId, LngLat lngLat, double accuracy, CancellationToken cancellationToken = default(CancellationToken))
         {
             var circularLookup = new BsonDocument{
                 {"$lookup", new BsonDocument{
@@ -179,7 +180,7 @@ namespace Ranger.Services.Geofences.Data
                 })
                 .Unwind(x => x["Union"])
                 .ReplaceRoot<Geofence>("$Union")
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return intersectingGeofences;
         }
@@ -291,7 +292,7 @@ namespace Ranger.Services.Geofences.Data
             return polygonSubPipeline;
         }
 
-        public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string tenantId, Guid projectId)
+        public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string tenantId, Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -303,7 +304,7 @@ namespace Ranger.Services.Geofences.Data
                 .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
                 .Sort("{ExternalId:1}")
                 .As<Geofence>()
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return geofences;
         }

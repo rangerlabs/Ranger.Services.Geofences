@@ -48,6 +48,7 @@ namespace Ranger.Services.Geofences
             services.AddControllers(options =>
                 {
                     options.EnableEndpointRouting = false;
+                    options.Filters.Add<OperationCanceledExceptionFilter>();
                 })
                 .AddNewtonsoftJson(options =>
                 {

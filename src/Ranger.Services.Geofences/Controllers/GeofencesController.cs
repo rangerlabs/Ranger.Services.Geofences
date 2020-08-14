@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Authorization;
@@ -39,11 +40,11 @@ namespace Ranger.Services.Geofences.Controllers
         ///<param name="projectId">The project id to retrieve geofences for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/{projectId}")]
-        public async Task<ApiResponse> GetAllGeofences(string tenantId, Guid projectId)
+        public async Task<ApiResponse> GetAllGeofences(string tenantId, Guid projectId, CancellationToken cancellationToken)
         {
             try
             {
-                var geofences = await this.geofenceRepository.GetAllGeofencesByProjectId(tenantId, projectId);
+                var geofences = await this.geofenceRepository.GetAllGeofencesByProjectId(tenantId, projectId, cancellationToken);
                 var geofenceResponse = new List<GeofenceResponseModel>();
                 foreach (var geofence in geofences)
                 {
@@ -84,12 +85,12 @@ namespace Ranger.Services.Geofences.Controllers
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/count")]
-        public async Task<ApiResponse> GetAllActiveGeofences(string tenantId)
+        public async Task<ApiResponse> GetAllActiveGeofences(string tenantId, CancellationToken cancellationToken)
         {
-            var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId);
+            var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId, cancellationToken);
             try
             {
-                var geofences = await geofenceRepository.GetAllActiveGeofencesCountAsync(tenantId, projects.Result.Select(p => p.ProjectId));
+                var geofences = await geofenceRepository.GetAllActiveGeofencesCountAsync(tenantId, projects.Result.Select(p => p.ProjectId), cancellationToken);
                 return new ApiResponse("Successfully calculated active geofences", geofences);
             }
             catch (Exception ex)
