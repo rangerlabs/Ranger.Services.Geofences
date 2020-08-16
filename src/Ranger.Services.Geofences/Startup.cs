@@ -111,7 +111,6 @@ namespace Ranger.Services.Geofences
         {
             this.loggerFactory = loggerFactory;
             var logger = loggerFactory.CreateLogger<Startup>();
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
             app.UseSwagger("v1", "Geofences API");
             app.UseAutoWrapper();
@@ -131,7 +130,7 @@ namespace Ranger.Services.Geofences
                 endpoints.MapRabbitMQHealthCheck();
             });
 
-            this.busSubscriber = app.UseRabbitMQ()
+            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
                 .SubscribeCommand<CreateGeofence>((c, e) =>
                     new CreateGeofenceRejected(e.Message, "")
                 )
@@ -149,11 +148,6 @@ namespace Ranger.Services.Geofences
                 .SubscribeCommand<EnforceGeofenceResourceLimits>();
 
             this.InitializeMongoDb(app, logger);
-        }
-
-        private void OnShutdown()
-        {
-            this.busSubscriber.Dispose();
         }
 
         private void InitializeMongoDb(IApplicationBuilder app, ILogger<Startup> logger)
