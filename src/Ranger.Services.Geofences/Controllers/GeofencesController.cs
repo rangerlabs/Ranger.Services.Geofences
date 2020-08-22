@@ -90,7 +90,7 @@ namespace Ranger.Services.Geofences.Controllers
             var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId, cancellationToken);
             try
             {
-                var geofences = await geofenceRepository.GetAllActiveGeofencesCountAsync(tenantId, projects.Result.Select(p => p.ProjectId), cancellationToken);
+                var geofences = await geofenceRepository.GetAllActiveGeofencesCountAsync(tenantId, projects.Result.Select(p => p.Id), cancellationToken);
                 return new ApiResponse("Successfully calculated active geofences", geofences);
             }
             catch (Exception ex)
