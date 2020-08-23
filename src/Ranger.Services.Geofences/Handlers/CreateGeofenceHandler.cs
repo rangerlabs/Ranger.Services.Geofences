@@ -17,15 +17,22 @@ namespace Ranger.Services.Geofences
         private readonly IGeofenceRepository repository;
         private readonly SubscriptionsHttpClient subscriptionsHttpClient;
         private readonly ProjectsHttpClient projectsHttpClient;
+        private readonly IntegrationsHttpClient integrationsHttpClient;
         private readonly ILogger<CreateGeofenceHandler> logger;
 
-        public CreateGeofenceHandler(IBusPublisher busPublisher, IGeofenceRepository repository, SubscriptionsHttpClient subscriptionsHttpClient, ProjectsHttpClient projectsHttpClient, ILogger<CreateGeofenceHandler> logger)
+        public CreateGeofenceHandler(IBusPublisher busPublisher,
+                                     IGeofenceRepository repository,
+                                     SubscriptionsHttpClient subscriptionsHttpClient,
+                                     ProjectsHttpClient projectsHttpClient,
+                                     IntegrationsHttpClient integrationsHttpClient,
+                                     ILogger<CreateGeofenceHandler> logger)
         {
             this.logger = logger;
             this.busPublisher = busPublisher;
             this.repository = repository;
             this.subscriptionsHttpClient = subscriptionsHttpClient;
             this.projectsHttpClient = projectsHttpClient;
+            this.integrationsHttpClient = integrationsHttpClient;
         }
 
         public async Task HandleAsync(CreateGeofence command, ICorrelationContext context)
@@ -42,14 +49,21 @@ namespace Ranger.Services.Geofences
                 throw new RangerException("Subscription limit met");
             }
 
-            //TODO: validate integrationIds are part of this project
+            var projectIntegrations = await integrationsHttpClient.GetAllIntegrationsByProjectId<IEnumerable<Integration>>(command.TenantId, command.ProjectId);
+            var invalidIds = getInvalidIds(projectIntegrations.Result.Select(i => i.Id), command.IntegrationIds);
+            if (invalidIds.Any())
+            {
+                logger.LogDebug("The following IntegrationsIds are invalid for project {ProjectId} - {IntegrationIds}", command.ProjectId, String.Join(',', invalidIds));
+                throw new RangerException($"The following IntegrationsIds are invalid for this project: {String.Join(',', invalidIds)}");
+            }
+            var nonDefaultIntegrationIds = removeDefaultIntegrationIds(projectIntegrations.Result, command.IntegrationIds);
 
             var geofence = new Geofence(
                 Guid.NewGuid(),
                 command.TenantId,
                 command.Shape,
                 GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates),
-                command.IntegrationIds ?? new List<Guid>(),
+                nonDefaultIntegrationIds ?? new List<Guid>(),
                 command.Radius,
                 command.ExternalId,
                 command.ProjectId,
@@ -84,6 +98,28 @@ namespace Ranger.Services.Geofences
             {
                 logger.LogError(ex, "An unexpected error occurred creating geofence {ExternalId}", command.ExternalId);
                 throw new RangerException($"An unexpected error occurred creating geofence '{command.ExternalId}'");
+            }
+        }
+
+        private IEnumerable<Guid> getInvalidIds(IEnumerable<Guid> projectIntegrations, IEnumerable<Guid> requestedIds)
+        {
+            foreach (var id in requestedIds)
+            {
+                if (!projectIntegrations.Contains(id))
+                {
+                    yield return id;
+                }
+            }
+        }
+
+        private IEnumerable<Guid> removeDefaultIntegrationIds(IEnumerable<Integration> projectIntegrations, IEnumerable<Guid> requestedIds)
+        {
+            foreach (var id in requestedIds)
+            {
+                if (!projectIntegrations.Single(i => i.Id.Equals(id)).IsDefault)
+                {
+                    yield return id;
+                }
             }
         }
     }
