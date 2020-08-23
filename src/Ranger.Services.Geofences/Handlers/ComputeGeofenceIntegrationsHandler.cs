@@ -26,7 +26,8 @@ namespace Ranger.Services.Geofences
             try
             {
                 var geofences = await geofenceRepository.GetGeofencesAsync(message.TenantId, message.ProjectId, message.BreadcrumbGeofenceResults.Select(b => b.GeofenceId));
-                var geofenceIntegrationResults = geofences.Where(g =>
+                var geofenceIntegrationResults = geofences
+                    .Where(g =>
                         g.Enabled &&
                         g.Schedule.IsWithinSchedule(message.Breadcrumb.RecordedAt.ToUniversalTime(), logger) &&
                         IsConstructed(g, message.Breadcrumb.RecordedAt) &&
@@ -69,13 +70,15 @@ namespace Ranger.Services.Geofences
         }
         private bool IsTriggerRequested(Geofence geofence, GeofenceEventEnum geofenceEvent)
         {
-            if ((geofenceEvent is GeofenceEventEnum.ENTERED && geofence.OnEnter)
-                || (geofenceEvent is GeofenceEventEnum.DWELLING && geofence.OnDwell)
-                || (geofenceEvent is GeofenceEventEnum.EXITED && geofence.OnExit))
+            var result = geofenceEvent switch
             {
-                return true;
-            }
-            return false;
+                GeofenceEventEnum.ENTERED => geofence.OnEnter,
+                GeofenceEventEnum.DWELLING => geofence.OnDwell,
+                GeofenceEventEnum.EXITED => geofence.OnExit,
+                _ => throw new ArgumentException("Invalid Event type")
+            };
+            logger.LogDebug("Determined Trigger request result to be {IsTriggered}", result);
+            return result;
         }
     }
 }

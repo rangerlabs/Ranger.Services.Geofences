@@ -38,6 +38,7 @@ namespace Ranger.Services.Geofences.Controllers
         ///</summary>
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
         ///<param name="projectId">The project id to retrieve geofences for</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/{projectId}")]
         public async Task<ApiResponse> GetAllGeofences(string tenantId, Guid projectId, CancellationToken cancellationToken)
@@ -83,6 +84,7 @@ namespace Ranger.Services.Geofences.Controllers
         /// Get all geofences that are in use by an active project
         ///</summary>
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
+        /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/count")]
         public async Task<ApiResponse> GetAllActiveGeofences(string tenantId, CancellationToken cancellationToken)
