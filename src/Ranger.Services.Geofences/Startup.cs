@@ -115,12 +115,10 @@ namespace Ranger.Services.Geofences
 
             app.UseSwagger("v1", "Geofences API");
             app.UseAutoWrapper();
-
+            app.UseUnhandedExceptionLogger();
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -130,7 +128,6 @@ namespace Ranger.Services.Geofences
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-
             this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
                 .SubscribeCommand<CreateGeofence>((c, e) =>
                     new CreateGeofenceRejected(e.Message, "")
