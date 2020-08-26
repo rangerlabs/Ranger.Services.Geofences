@@ -49,21 +49,25 @@ namespace Ranger.Services.Geofences
                 throw new RangerException("Subscription limit met");
             }
 
-            var projectIntegrations = await integrationsHttpClient.GetAllIntegrationsByProjectId<IEnumerable<Integration>>(command.TenantId, command.ProjectId);
-            var invalidIds = getInvalidIds(projectIntegrations.Result.Select(i => i.Id), command.IntegrationIds);
-            if (invalidIds.Any())
+            IEnumerable<Guid> nonDefaultIntegrationIds = new List<Guid>();
+            if (!(command.IntegrationIds is null) || command.IntegrationIds.Any())
             {
-                logger.LogDebug("The following IntegrationsIds are invalid for project {ProjectId} - {IntegrationIds}", command.ProjectId, String.Join(',', invalidIds));
-                throw new RangerException($"The following IntegrationsIds are invalid for this project: {String.Join(',', invalidIds)}");
+                var projectIntegrations = await integrationsHttpClient.GetAllIntegrationsByProjectId<IEnumerable<Integration>>(command.TenantId, command.ProjectId);
+                var invalidIds = getInvalidIds(projectIntegrations.Result.Select(i => i.Id), command.IntegrationIds);
+                if (invalidIds.Any())
+                {
+                    logger.LogDebug("The following IntegrationsIds are invalid for project {ProjectId} - {IntegrationIds}", command.ProjectId, String.Join(',', invalidIds));
+                    throw new RangerException($"The following IntegrationsIds are invalid for this project: {String.Join(',', invalidIds)}");
+                }
+                nonDefaultIntegrationIds = removeDefaultIntegrationIds(projectIntegrations.Result, command.IntegrationIds);
             }
-            var nonDefaultIntegrationIds = removeDefaultIntegrationIds(projectIntegrations.Result, command.IntegrationIds);
 
             var geofence = new Geofence(
                 Guid.NewGuid(),
                 command.TenantId,
                 command.Shape,
                 GeoJsonGeometryFactory.Factory(command.Shape, command.Coordinates),
-                nonDefaultIntegrationIds ?? new List<Guid>(),
+                nonDefaultIntegrationIds,
                 command.Radius,
                 command.ExternalId,
                 command.ProjectId,
