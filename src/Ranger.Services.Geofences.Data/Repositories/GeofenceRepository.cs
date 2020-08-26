@@ -44,7 +44,20 @@ namespace Ranger.Services.Geofences.Data
             {
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
-            await geofenceCollection.InsertOneAsync(geofence);
+            try
+            {
+                await geofenceCollection.InsertOneAsync(geofence);
+            }
+            catch (MongoWriteException ex)
+            {
+                if (ex.WriteError != null && ex.WriteError.Code == 11000)
+                {
+                    throw new RangerException($"A geofence with the ExternalId {geofence.ExternalId} already exists", ex);
+                }
+                logger.LogError(ex, "An unexpected error occurred creating geofence {ExternalId} with {Code}", geofence.ExternalId, ex.WriteError.Code);
+                throw new RangerException($"An unexpected error occurred creating geofence '{geofence.ExternalId}'");
+            }
+
             await insertCreatedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
         }
 
@@ -71,7 +84,15 @@ namespace Ranger.Services.Geofences.Data
                 geofence
             );
 
-            await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
+            try
+            {
+                await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
+            }
+            catch (MongoWriteException ex)
+            {
+                logger.LogError(ex, "An unexpected error occurred updating geofence {ExternalId}", geofence.ExternalId);
+                throw new RangerException($"An unexpected error occurred updating geofence '{geofence.ExternalId}'");
+            }
             return;
         }
 

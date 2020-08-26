@@ -54,10 +54,9 @@ namespace Ranger.Services.Geofences
                 await repository.UpdateGeofence(geofence, command.CommandingUserEmailOrTokenPrefix);
                 busPublisher.Publish(new GeofenceUpdated(command.TenantId, command.ExternalId, command.Id), CorrelationContext.FromId(context.CorrelationContextId));
             }
-            catch (MongoWriteException ex)
+            catch (RangerException)
             {
-                logger.LogError(ex, "An unexpected error occurred updating geofence {ExternalId}", command.ExternalId);
-                throw new RangerException($"An unexpected error occurred updating geofence '{command.ExternalId}'");
+                throw;
             }
             catch (Exception ex)
             {
