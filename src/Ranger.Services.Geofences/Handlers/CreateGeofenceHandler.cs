@@ -50,7 +50,7 @@ namespace Ranger.Services.Geofences
             }
 
             IEnumerable<Guid> nonDefaultIntegrationIds = new List<Guid>();
-            if (!(command.IntegrationIds is null) || command.IntegrationIds.Any())
+            if (!(command.IntegrationIds is null) || command.IntegrationIds?.Any() == true)
             {
                 var projectIntegrations = await integrationsHttpClient.GetAllIntegrationsByProjectId<IEnumerable<Integration>>(command.TenantId, command.ProjectId);
                 var invalidIds = getInvalidIds(projectIntegrations.Result.Select(i => i.Id), command.IntegrationIds);
