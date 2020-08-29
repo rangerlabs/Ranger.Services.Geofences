@@ -128,7 +128,7 @@ namespace Ranger.Services.Geofences
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
+            this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<CreateGeofence>((c, e) =>
                     new CreateGeofenceRejected(e.Message, "")
                 )
