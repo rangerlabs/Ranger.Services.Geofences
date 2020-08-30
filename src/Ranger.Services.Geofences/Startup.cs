@@ -34,8 +34,6 @@ namespace Ranger.Services.Geofences
     {
         private readonly IWebHostEnvironment Environment;
         private readonly IConfiguration configuration;
-        private ILoggerFactory loggerFactory;
-        private IBusSubscriber busSubscriber;
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
@@ -110,7 +108,6 @@ namespace Ranger.Services.Geofences
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
-            this.loggerFactory = loggerFactory;
             var logger = loggerFactory.CreateLogger<Startup>();
 
             app.UseSwagger("v1", "Geofences API");
@@ -128,22 +125,22 @@ namespace Ranger.Services.Geofences
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-            this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<CreateGeofence>((c, e) =>
+            app.UseRabbitMQ()
+                .SubscribeCommandWithHandler<CreateGeofence>((c, e) =>
                     new CreateGeofenceRejected(e.Message, "")
                 )
-                .SubscribeCommand<UpdateGeofence>((c, e) =>
+                .SubscribeCommandWithHandler<UpdateGeofence>((c, e) =>
                     new UpdateGeofenceRejected(e.Message, "")
                 )
-                .SubscribeCommand<DeleteGeofence>((c, e) =>
+                .SubscribeCommandWithHandler<DeleteGeofence>((c, e) =>
                     new DeleteGeofenceRejected(e.Message, "")
                 )
-                .SubscribeCommand<PurgeIntegrationFromGeofences>((c, e) =>
+                .SubscribeCommandWithHandler<PurgeIntegrationFromGeofences>((c, e) =>
                     new PurgeIntegrationFromGeofencesRejected(e.Message, "")
                 )
-                .SubscribeCommand<ComputeGeofenceIntegrations>()
-                .SubscribeCommand<ComputeGeofenceIntersections>()
-                .SubscribeCommand<EnforceGeofenceResourceLimits>();
+                .SubscribeCommandWithHandler<ComputeGeofenceIntegrations>()
+                .SubscribeCommandWithHandler<ComputeGeofenceIntersections>()
+                .SubscribeCommandWithHandler<EnforceGeofenceResourceLimits>();
 
             this.InitializeMongoDb(app, logger);
         }
