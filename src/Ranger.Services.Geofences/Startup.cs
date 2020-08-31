@@ -87,12 +87,21 @@ namespace Ranger.Services.Geofences
                     options.RequireHttpsMetadata = false;
                 });
 
-            services.AddDataProtection()
-                .SetApplicationName("Geofences")
-                .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .PersistKeysToDbContext<GeofencesDbContext>();
-
+            // Workaround for MAC validation issues on MacOS
+            if (configuration.IsIntegrationTesting())
+            {
+                services.AddDataProtection()
+                    .SetApplicationName("Geofences")
+                    .PersistKeysToDbContext<GeofencesDbContext>();
+            }
+            else
+            {
+                services.AddDataProtection()
+                    .SetApplicationName("Geofences")
+                    .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .PersistKeysToDbContext<GeofencesDbContext>();
+            }
             services.AddLiveHealthCheck();
             services.AddEntityFrameworkHealthCheck<GeofencesDbContext>();
             services.AddDockerImageTagHealthCheck();
