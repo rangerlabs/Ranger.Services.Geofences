@@ -260,7 +260,7 @@ namespace Ranger.Services.Geofences.Data
                             {"$lte", 0}
                         }},
                         {"TenantId", tenantId},
-                        {"ProjectId", projectId}
+                        {"ProjectId", BsonBinaryData.Create(projectId)}
                     }}});
 
             circularSubPipeline.Add(
@@ -307,7 +307,7 @@ namespace Ranger.Services.Geofences.Data
                             }}
                         }},
                         {"TenantId", tenantId},
-                        {"ProjectId", projectId}
+                        {"ProjectId", BsonBinaryData.Create(projectId)}
                     }}
                 });
             return polygonSubPipeline;

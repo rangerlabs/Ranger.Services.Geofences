@@ -17,11 +17,11 @@ namespace Ranger.Services.Geofences
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
 
-            var host = CreateWebHostBuilder(config["serverBindingUrl"], args).Build();
+            var host = CreateWebHostBuilder(args).UseUrls(config["serverBindingUrl"]).Build();
 
             using (var scope = host.Services.CreateScope())
             {
@@ -33,9 +33,8 @@ namespace Ranger.Services.Geofences
             host.Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string serverBindingUrl, string[] args) =>
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-            .UseUrls(serverBindingUrl)
             .UseLogging()
             .UseStartup<Startup>()
             .ConfigureServices(services => services.AddAutofac());

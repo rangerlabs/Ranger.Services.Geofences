@@ -18,6 +18,7 @@ ARG MYGET_API_KEY
 COPY *.sln ./
 COPY ./src/Ranger.Services.Geofences/Ranger.Services.Geofences.csproj ./src/Ranger.Services.Geofences/Ranger.Services.Geofences.csproj
 COPY ./src/Ranger.Services.Geofences.Data/Ranger.Services.Geofences.Data.csproj ./src/Ranger.Services.Geofences.Data/Ranger.Services.Geofences.Data.csproj
+COPY ./test/Ranger.Services.Geofences.Tests/Ranger.Services.Geofences.Tests.csproj ./test/Ranger.Services.Geofences.Tests/Ranger.Services.Geofences.Tests.csproj
 COPY ./scripts ./scripts
 
 RUN ./scripts/create-nuget-config.sh ${MYGET_API_KEY}
