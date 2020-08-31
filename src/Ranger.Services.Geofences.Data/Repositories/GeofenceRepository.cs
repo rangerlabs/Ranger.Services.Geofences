@@ -247,7 +247,6 @@ namespace Ranger.Services.Geofences.Data
                         {"ExpirationDate", 1},
                         {"LaunchDate", 1},
                         {"Schedule", 1},
-                        {"TimeZoneId", 1},
                         {"CalculatedDiff", new BsonDocument{
                             {"$subtract", new BsonArray{"$dist.calculated","$Radius"}}
                         }},
@@ -287,7 +286,6 @@ namespace Ranger.Services.Geofences.Data
                         {"ExpirationDate", 1},
                         {"LaunchDate", 1},
                         {"Schedule", 1},
-                        {"TimeZoneId", 1}
                     }}});
             return circularSubPipeline;
         }
