@@ -19,9 +19,7 @@ namespace Ranger.Services.Geofences.Tests
         }
 
         [Fact]
-        public Task ApiGatway_Starts()
-        {
-            return Task.CompletedTask;
-        }
+        public void Geofences_Starts()
+        { }
     }
 }
