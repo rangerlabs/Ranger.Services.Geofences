@@ -50,14 +50,20 @@ namespace Ranger.Services.Geofences.Data
             }
             catch (MongoWriteException ex)
             {
-                if (ex.WriteError != null && ex.WriteError.Code == 11000)
+                if (!(ex.WriteError is null))
                 {
-                    throw new RangerException($"A geofence with the ExternalId {geofence.ExternalId} already exists", ex);
+                    if (ex.WriteError.Code == 11000)
+                    {
+                        throw new RangerException($"A geofence with the ExternalId {geofence.ExternalId} already exists", ex);
+                    }
+                    if (ex.WriteError.Code == 16755)
+                    {
+                        throw new RangerException($"The geofence contained invalid coordinates", ex);
+                    }
                 }
                 logger.LogError(ex, "An unexpected error occurred creating geofence {ExternalId} with {Code}", geofence.ExternalId, ex.WriteError.Code);
                 throw new RangerException($"An unexpected error occurred creating geofence '{geofence.ExternalId}'");
             }
-
             await insertCreatedChangeLog(geofence, commandingUserEmailOrTokenPrefix);
         }
 
@@ -79,21 +85,31 @@ namespace Ranger.Services.Geofences.Data
             }
 
             geofence.SetCreatedDate(currentGeofence.CreatedDate);
-            await geofenceCollection.ReplaceOneAsync(
-                (_) => _.TenantId == geofence.TenantId && _.ProjectId == geofence.ProjectId && _.Id == geofence.Id,
-                geofence
-            );
 
             try
             {
-                await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
+                await geofenceCollection.ReplaceOneAsync(
+                    (_) => _.TenantId == geofence.TenantId && _.ProjectId == geofence.ProjectId && _.Id == geofence.Id,
+                    geofence
+                );
             }
             catch (MongoWriteException ex)
             {
+                if (!(ex.WriteError is null))
+                {
+                    if (ex.WriteError.Code == 11000)
+                    {
+                        throw new RangerException($"A geofence with the ExternalId {geofence.ExternalId} already exists", ex);
+                    }
+                    if (ex.WriteError.Code == 16755)
+                    {
+                        throw new RangerException($"The geofence contained invalid coordinates", ex);
+                    }
+                }
                 logger.LogError(ex, "An unexpected error occurred updating geofence {ExternalId}", geofence.ExternalId);
                 throw new RangerException($"An unexpected error occurred updating geofence '{geofence.ExternalId}'");
             }
-            return;
+            await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
         }
 
         public async Task DeleteGeofence(string tenantId, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix)
