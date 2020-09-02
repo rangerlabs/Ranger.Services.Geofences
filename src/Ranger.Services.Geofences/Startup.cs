@@ -70,9 +70,7 @@ namespace Ranger.Services.Geofences
             services.AddDbContext<GeofencesDbContext>(options =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
-            },
-                ServiceLifetime.Transient
-            );
+            });
 
             services.AddTransient<IGeofencesDbContextInitializer, GeofencesDbContextInitializer>();
             services.AddTransient<ILoginRoleRepository<GeofencesDbContext>, LoginRoleRepository<GeofencesDbContext>>();

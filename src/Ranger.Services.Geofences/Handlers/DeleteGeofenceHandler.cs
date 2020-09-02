@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
+using Ranger.RabbitMQ.BusPublisher;
 using Ranger.Services.Geofences.Data;
 
 namespace Ranger.Services.Geofences
