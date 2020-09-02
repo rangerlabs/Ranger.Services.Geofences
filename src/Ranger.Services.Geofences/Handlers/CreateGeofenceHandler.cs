@@ -16,16 +16,16 @@ namespace Ranger.Services.Geofences
     {
         private readonly IBusPublisher busPublisher;
         private readonly IGeofenceRepository repository;
-        private readonly SubscriptionsHttpClient subscriptionsHttpClient;
-        private readonly ProjectsHttpClient projectsHttpClient;
-        private readonly IntegrationsHttpClient integrationsHttpClient;
+        private readonly ISubscriptionsHttpClient subscriptionsHttpClient;
+        private readonly IProjectsHttpClient projectsHttpClient;
+        private readonly IIntegrationsHttpClient integrationsHttpClient;
         private readonly ILogger<CreateGeofenceHandler> logger;
 
         public CreateGeofenceHandler(IBusPublisher busPublisher,
                                      IGeofenceRepository repository,
-                                     SubscriptionsHttpClient subscriptionsHttpClient,
-                                     ProjectsHttpClient projectsHttpClient,
-                                     IntegrationsHttpClient integrationsHttpClient,
+                                     ISubscriptionsHttpClient subscriptionsHttpClient,
+                                     IProjectsHttpClient projectsHttpClient,
+                                     IIntegrationsHttpClient integrationsHttpClient,
                                      ILogger<CreateGeofenceHandler> logger)
         {
             this.logger = logger;

@@ -21,11 +21,11 @@ namespace Ranger.Services.Geofences.Controllers
     public class GeofencesController : ControllerBase
     {
         private readonly IGeofenceRepository geofenceRepository;
-        private readonly TenantsHttpClient tenantsClient;
+        private readonly ITenantsHttpClient tenantsClient;
         private readonly ILogger<GeofencesController> logger;
-        private readonly ProjectsHttpClient projectsHttpClient;
+        private readonly IProjectsHttpClient projectsHttpClient;
 
-        public GeofencesController(IGeofenceRepository geofenceRepository, ProjectsHttpClient projectsHttpClient, TenantsHttpClient tenantsClient, ILogger<GeofencesController> logger)
+        public GeofencesController(IGeofenceRepository geofenceRepository, IProjectsHttpClient projectsHttpClient, ITenantsHttpClient tenantsClient, ILogger<GeofencesController> logger)
         {
             this.projectsHttpClient = projectsHttpClient;
             this.geofenceRepository = geofenceRepository;
