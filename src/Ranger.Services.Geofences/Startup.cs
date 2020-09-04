@@ -24,6 +24,7 @@ using Ranger.InternalHttpClient;
 using Ranger.Mongo;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
+using Ranger.Redis;
 using Ranger.Services.Geofences.Data;
 using Ranger.Services.Geofences.Messages.Commands;
 using Ranger.Services.Geofences.Messages.RejectedEvents;
@@ -76,6 +77,8 @@ namespace Ranger.Services.Geofences
             services.AddTransient<ILoginRoleRepository<GeofencesDbContext>, LoginRoleRepository<GeofencesDbContext>>();
             services.AddTransient<IGeofenceRepository, GeofenceRepository>();
             services.AddSingleton<IMongoDbSeeder, GeofenceSeeder>();
+
+            services.AddRedis(configuration["redis:ConnectionString"]);
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>

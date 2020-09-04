@@ -18,6 +18,7 @@ services:
     - docker
     - rabbitmq
     - mongodb
+    - redis 
 branches:
     only:
         - master

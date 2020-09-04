@@ -35,6 +35,7 @@
     <PackageReference Include="S2Geometry" Version="1.0.3" />
     <PackageReference Include="Ranger.ApiUtilities" Version="3.6.1" />
     <PackageReference Include="Ranger.InternalHttpClient" Version="5.1.1" />
+    <PackageReference Include="Ranger.Redis" version="1.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Geofences.Data\Ranger.Services.Geofences.Data.csproj" />
