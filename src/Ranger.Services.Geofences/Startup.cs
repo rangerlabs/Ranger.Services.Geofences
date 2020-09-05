@@ -78,7 +78,7 @@ namespace Ranger.Services.Geofences
             services.AddTransient<IGeofenceRepository, GeofenceRepository>();
             services.AddSingleton<IMongoDbSeeder, GeofenceSeeder>();
 
-            services.AddRedis(configuration["redis:ConnectionString"]);
+            services.AddRedis(configuration["redis:ConnectionString"], out _);
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
