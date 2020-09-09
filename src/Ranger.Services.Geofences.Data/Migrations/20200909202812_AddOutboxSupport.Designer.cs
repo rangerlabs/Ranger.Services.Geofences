@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ranger.Services.Geofences.Data;
@@ -9,9 +10,10 @@ using Ranger.Services.Geofences.Data;
 namespace Ranger.Services.Geofences.Data.Migrations
 {
     [DbContext(typeof(GeofencesDbContext))]
-    partial class GeofencesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200909202812_AddOutboxSupport")]
+    partial class AddOutboxSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

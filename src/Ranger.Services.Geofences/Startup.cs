@@ -111,7 +111,7 @@ namespace Ranger.Services.Geofences
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            builder.AddRabbitMq<Startup>();
+            builder.AddRabbitMq<Startup, GeofencesDbContext>();
             builder.AddMongo();
             builder.RegisterInstance<JsonDiffPatch>(new JsonDiffPatch());
         }

@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Ranger.Common;
+using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Geofences.Data
 {
-    public class GeofencesDbContext : DbContext, IDataProtectionKeyContext
+    public class GeofencesDbContext : DbContext, IDataProtectionKeyContext, IOutboxStore
     {
 
         private readonly IDataProtectionProvider dataProtectionProvider;
@@ -17,6 +18,7 @@ namespace Ranger.Services.Geofences.Data
         }
 
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<OutboxMessage> Outbox { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
