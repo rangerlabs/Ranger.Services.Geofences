@@ -6,6 +6,7 @@ using Ranger.RabbitMQ.BusPublisher;
 
 namespace Ranger.Services.Geofences
 {
+    [NonAcked]
     [MessageNamespace("breadcrumbs")]
     public class ComputeGeofenceEvents : ICommand
     {
