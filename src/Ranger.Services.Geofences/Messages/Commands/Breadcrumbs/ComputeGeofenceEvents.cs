@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using Ranger.Common;
 using Ranger.RabbitMQ;
+using Ranger.RabbitMQ.BusPublisher;
 
 namespace Ranger.Services.Geofences
 {
+    [NonAcked]
     [MessageNamespace("breadcrumbs")]
     public class ComputeGeofenceEvents : ICommand
     {
