@@ -21,6 +21,7 @@ namespace Ranger.Services.Geofences.Data
             public IEnumerable<Geofence> PolygonMatches { get; set; }
         }
 
+        public IMongoDatabase Database { get; }
         private readonly ILogger<GeofenceRepository> logger;
         private readonly IMongoCollection<Geofence> geofenceCollection;
         private readonly IMongoCollection<GeofenceChangeLog> geofenceChangeLogCollection;
@@ -28,6 +29,7 @@ namespace Ranger.Services.Geofences.Data
 
         public GeofenceRepository(IMongoDatabase database, JsonDiffPatch jsonDiffPatch, ILogger<GeofenceRepository> logger)
         {
+            this.Database = database;
             this.jsonDiffPatch = jsonDiffPatch;
             this.geofenceCollection = database.GetCollection<Geofence>(CollectionNames.GeofenceCollection);
             this.geofenceChangeLogCollection = database.GetCollection<GeofenceChangeLog>(CollectionNames.GeofenceChangeLogCollection);

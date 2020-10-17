@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Driver;
 using Ranger.Common;
 
 namespace Ranger.Services.Geofences.Data
 {
     public interface IGeofenceRepository
     {
+        IMongoDatabase Database {get;}
         Task AddGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix);
         Task UpdateGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix);
         Task DeleteGeofence(string tenantId, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix);

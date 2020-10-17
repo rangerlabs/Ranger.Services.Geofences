@@ -59,7 +59,6 @@ namespace Ranger.Services.Geofences
 
             services.AddRangerApiVersioning();
             services.ConfigureAutoWrapperModelStateResponseFactory();
-            services.AddSwaggerGen("Geofences API", "v1");
 
             var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();
@@ -97,6 +96,7 @@ namespace Ranger.Services.Geofences
             }
             else
             {
+                services.AddSwaggerGen("Geofences API", "v1");
                 services.AddDataProtection()
                     .SetApplicationName("Geofences")
                     .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
@@ -120,7 +120,10 @@ namespace Ranger.Services.Geofences
         {
             var logger = loggerFactory.CreateLogger<Startup>();
 
-            app.UseSwagger("v1", "Geofences API");
+            if (!configuration.IsIntegrationTesting())
+            {
+                app.UseSwagger("v1", "Geofences API");
+            }
             app.UseAutoWrapper();
             app.UseUnhandedExceptionLogger();
             app.UseRouting();
