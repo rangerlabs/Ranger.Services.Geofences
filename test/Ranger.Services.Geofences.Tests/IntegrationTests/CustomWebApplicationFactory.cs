@@ -32,8 +32,6 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
 
             builder.ConfigureServices(services =>
             {
-                services.AddAutofac();
-
                 var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
