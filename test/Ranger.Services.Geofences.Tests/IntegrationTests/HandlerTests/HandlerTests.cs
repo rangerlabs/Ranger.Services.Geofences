@@ -23,10 +23,5 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         [Fact]
         public void Geofences_Starts()
         { }
-
-        [Fact]
-        public void GetAllGeofences_ReturnsAllGeofences_ForValidTenantAndProjectIds()
-        {
-        }
     }
 }
