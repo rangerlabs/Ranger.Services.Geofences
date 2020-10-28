@@ -96,7 +96,10 @@ namespace Ranger.Services.Geofences
             }
             else
             {
-                services.AddSwaggerGen("Geofences API", "v1");
+                if (Environment.IsDevelopment())
+                {
+                    services.AddSwaggerGen("Geofences API", "v1");
+                }
                 services.AddDataProtection()
                     .SetApplicationName("Geofences")
                     .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
@@ -120,7 +123,7 @@ namespace Ranger.Services.Geofences
         {
             var logger = loggerFactory.CreateLogger<Startup>();
 
-            if (!configuration.IsIntegrationTesting())
+            if (Environment.IsDevelopment())
             {
                 app.UseSwagger("v1", "Geofences API");
             }
