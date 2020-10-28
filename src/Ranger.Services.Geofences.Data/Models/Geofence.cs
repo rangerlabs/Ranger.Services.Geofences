@@ -104,5 +104,7 @@ namespace Ranger.Services.Geofences.Data
             }
             CreatedDate = createdDate;
         }
+
+        public new void SetUpdatedDate() => base.SetUpdatedDate();
     }
 }

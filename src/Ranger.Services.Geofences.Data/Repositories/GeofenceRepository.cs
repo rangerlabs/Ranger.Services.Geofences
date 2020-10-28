@@ -87,6 +87,7 @@ namespace Ranger.Services.Geofences.Data
             }
 
             geofence.SetCreatedDate(currentGeofence.CreatedDate);
+            geofence.SetUpdatedDate();
 
             try
             {
@@ -338,12 +339,38 @@ namespace Ranger.Services.Geofences.Data
 
             var geofences = await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
-                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1}")
-                .Sort("{ExternalId:1}")
+                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
+                .Sort("{CreatedDate:1}")
                 .As<Geofence>()
                 .ToListAsync(cancellationToken);
 
             return geofences;
+        }
+
+        public async Task<IEnumerable<Geofence>> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.DescendingLowerInvariant, int page = 1, int pageCount = 100, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            }
+
+            var geofences = await geofenceCollection.Aggregate()
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
+                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
+                .Sort(getSortStage(orderBy,sortOrder))
+                .Skip((page - 1) * pageCount)
+                .Limit(pageCount)
+                .As<Geofence>()
+                .ToListAsync(cancellationToken);
+
+            return geofences;
+        }
+
+        private string getSortStage(string orderBy, string sortOrder)
+        {
+            return orderBy == OrderByOptions.CreatedDate ? 
+            "{"+ OrderByOptions.NamingMap(orderBy) +":"+ GeofenceSortOrders.SortOrderMap(sortOrder) +"}" 
+            : "{"+ OrderByOptions.NamingMap(orderBy) +":"+ GeofenceSortOrders.SortOrderMap(sortOrder) + ", " + OrderByOptions.CreatedDate +":"+ GeofenceSortOrders.Descending +"}";
         }
 
 

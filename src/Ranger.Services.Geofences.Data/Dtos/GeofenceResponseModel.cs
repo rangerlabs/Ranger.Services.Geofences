@@ -23,6 +23,8 @@ namespace Ranger.Services.Geofences.Data
         public bool Enabled { get; set; } = true;
         public DateTime ExpirationDate { get; set; }
         public DateTime LaunchDate { get; set; }
+        public DateTime CreatedDate {get;set;}
+        public DateTime UpdatedDate {get;set;}
         public Schedule Schedule { get; set; }
     }
 }

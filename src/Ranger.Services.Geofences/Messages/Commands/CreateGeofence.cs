@@ -9,6 +9,10 @@ namespace Ranger.Services.Geofences
     [MessageNamespaceAttribute("geofences")]
     public class CreateGeofence : ICommand
     {
+        public CreateGeofence()
+        {
+        }
+
         public CreateGeofence(string commandingUserEmailOrTokenPrefix,
             string tenantId,
             string externalId,

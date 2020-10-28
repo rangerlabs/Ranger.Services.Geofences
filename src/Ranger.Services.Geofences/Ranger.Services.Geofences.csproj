@@ -4,6 +4,7 @@
     <AssemblyName>Ranger.Services.Geofences</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Ranger.Services.Geofences</PackageId>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -15,6 +16,8 @@
   <ItemGroup>
     <PackageReference Include="jsondiffpatch.net" Version="2.2.0" />
     <PackageReference Include="Autofac" Version="5.2.0" />
+    <PackageReference Include="FluentValidation" Version="9.2.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
     <PackageReference Include="IdentityServer4" Version="3.1.0" />
     <PackageReference Include="IdentityServer4.AspNetIdentity" Version="3.1.0" />
     <PackageReference Include="IdentityServer4.EntityFramework" Version="3.1.0" />

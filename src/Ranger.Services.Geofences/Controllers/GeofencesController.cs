@@ -38,14 +38,25 @@ namespace Ranger.Services.Geofences.Controllers
         ///</summary>
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
         ///<param name="projectId">The project id to retrieve geofences for</param>
-        /// <param name="cancellationToken"></param>
+        ///<param name="orderBy">The project id to retrieve geofences for</param>
+        ///<param name="sortOrder">The project id to retrieve geofences for</param>
+        ///<param name="page">The project id to retrieve geofences for</param>
+        ///<param name="pageCount">The project id to retrieve geofences for</param>
+        ///<param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/{projectId}")]
-        public async Task<ApiResponse> GetAllGeofences(string tenantId, Guid projectId, CancellationToken cancellationToken)
+        public async Task<ApiResponse> GetAllGeofences(
+            string tenantId,
+            Guid projectId,
+            CancellationToken cancellationToken,
+            [FromQuery] string orderBy = OrderByOptions.CreatedDate,
+            [FromQuery] string sortOrder = GeofenceSortOrders.DescendingLowerInvariant,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageCount = 100)
         {
             try
             {
-                var geofences = await this.geofenceRepository.GetAllGeofencesByProjectId(tenantId, projectId, cancellationToken);
+                var geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
                 var geofenceResponse = new List<GeofenceResponseModel>();
                 foreach (var geofence in geofences)
                 {
@@ -67,7 +78,9 @@ namespace Ranger.Services.Geofences.Controllers
                         ProjectId = geofence.ProjectId,
                         Radius = geofence.Radius,
                         Schedule = Schedule.IsUtcFullSchedule(geofence.Schedule) ? null : geofence.Schedule,
-                        Shape = geofence.Shape
+                        Shape = geofence.Shape,
+                        CreatedDate = geofence.CreatedDate,
+                        UpdatedDate = geofence.UpdatedDate
                     });
                 }
                 return new ApiResponse("Successfully retrieved geofences", geofenceResponse);
@@ -87,7 +100,7 @@ namespace Ranger.Services.Geofences.Controllers
         /// <param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/count")]
-        public async Task<ApiResponse> GetAllActiveGeofences(string tenantId, CancellationToken cancellationToken)
+        public async Task<ApiResponse> GetAllGeofenceCount(string tenantId, CancellationToken cancellationToken)
         {
             var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId, cancellationToken);
             try

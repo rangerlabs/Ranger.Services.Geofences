@@ -1,5 +1,6 @@
 using System;
 using MongoDB.Driver;
+using Moq;
 using Ranger.Services.Geofences.Data;
 
 namespace Ranger.Services.Geofences.Tests.IntegrationTests
