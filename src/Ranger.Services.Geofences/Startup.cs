@@ -55,7 +55,8 @@ namespace Ranger.Services.Geofences
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
-                });
+                })
+                .AddRangerFluentValidation<Startup>();
 
             services.AddRangerApiVersioning();
             services.ConfigureAutoWrapperModelStateResponseFactory();

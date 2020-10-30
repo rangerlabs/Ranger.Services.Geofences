@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoWrapper.Wrappers;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,14 +23,21 @@ namespace Ranger.Services.Geofences.Controllers
     {
         private readonly IGeofenceRepository geofenceRepository;
         private readonly ITenantsHttpClient tenantsClient;
+        private readonly IValidator<GeofenceRequestParams> paramValidator;
         private readonly ILogger<GeofencesController> logger;
         private readonly IProjectsHttpClient projectsHttpClient;
 
-        public GeofencesController(IGeofenceRepository geofenceRepository, IProjectsHttpClient projectsHttpClient, ITenantsHttpClient tenantsClient, ILogger<GeofencesController> logger)
+        public GeofencesController(
+            IGeofenceRepository geofenceRepository,
+            IProjectsHttpClient projectsHttpClient,
+            ITenantsHttpClient tenantsClient,
+            IValidator<GeofenceRequestParams> paramValidator,
+            ILogger<GeofencesController> logger)
         {
             this.projectsHttpClient = projectsHttpClient;
             this.geofenceRepository = geofenceRepository;
             this.tenantsClient = tenantsClient;
+            this.paramValidator = paramValidator;
             this.logger = logger;
         }
 
@@ -54,6 +62,13 @@ namespace Ranger.Services.Geofences.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageCount = 100)
         {
+            var validationResult = paramValidator.Validate(new GeofenceRequestParams(sortOrder, orderBy, page, pageCount), options => options.IncludeRuleSets("Get"));
+            if (!validationResult.IsValid)
+            {
+                var validationErrors = validationResult.Errors.Select(f => new ValidationError(f.PropertyName, f.ErrorMessage));
+                throw new ApiException(validationErrors);
+            }
+
             try
             {
                 var geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);

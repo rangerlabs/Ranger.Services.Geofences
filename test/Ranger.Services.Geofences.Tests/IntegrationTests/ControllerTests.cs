@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -328,6 +329,29 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
                 actual.ExternalId.ShouldBe(expected.ExternalId);
             }
         }
+
+        [Fact]
+        public async Task GetAllGeofences_Returns400_WhenInvalidParam()
+        {
+            var client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    services.AddAuthentication("Test")
+                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                            "Test", options => {});
+                });
+            }).CreateClient();
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            client.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var response = await client.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?page=0");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
+            result.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+       }
 
         [Fact]
         public async Task GetAllGeofences_Returns500_ForRepositoryException()
