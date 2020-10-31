@@ -22,8 +22,7 @@ namespace Ranger.Services.Geofences
                      .Must((x) => GetOrderByOptions().Contains(x, StringComparer.InvariantCultureIgnoreCase))
                     .WithMessage($"SortOrder must be one of {String.Join(',', GetOrderByOptions())}");
                 RuleFor(x => x.Page)
-                    .NotEmpty()
-                    .GreaterThan(0);
+                    .GreaterThanOrEqualTo(0);
                 RuleFor(x => x.PageCount)
                     .NotEmpty()
                     .GreaterThan(0)

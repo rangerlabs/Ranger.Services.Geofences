@@ -288,7 +288,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
             result.Result.Count().ShouldBe(10);
 
-            var expectedTopTen = Seed.TenantId1_ProjectId1_Geofences.OrderByDescending(g => g.CreatedDate).Skip(10).Take(10);
+            var expectedTopTen = Seed.TenantId1_ProjectId1_Geofences.OrderByDescending(g => g.CreatedDate).Skip(20).Take(10);
 
             for (int i = 0; i < result.Result.Count(); i++)
             {
@@ -320,7 +320,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
             result.Result.Count().ShouldBe(10);
 
-            var expectedTopTen = Seed.TenantId1_ProjectId1_Geofences.OrderByDescending(g => g.CreatedDate).Skip(90).Take(10);
+            var expectedTopTen = Seed.TenantId1_ProjectId1_Geofences.OrderByDescending(g => g.CreatedDate).Skip(100).Take(10);
 
             for (int i = 0; i < result.Result.Count(); i++)
             {
@@ -346,7 +346,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             client.DefaultRequestHeaders.Add("api-version", "1.0");
 
-            var response = await client.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?page=0");
+            var response = await client.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?page=-1");
             var content = await response.Content.ReadAsStringAsync();
 
             var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);

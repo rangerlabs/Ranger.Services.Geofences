@@ -107,15 +107,11 @@ namespace Ranger.Services.Geofences.Tests
         }
 
         [Fact]
-        public void Page_HasValidationError_WhenLessThanEqualTo0()
+        public void Page_HasValidationError_WhenLessThan0()
         {
-            var geofenceRequestParams = new GeofenceRequestParams("", "", 0, 0);
-            var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
-            result.ShouldHaveValidationErrorFor(r => r.Page);
-
             var geofenceRequestParams2 = new GeofenceRequestParams("", "", -1, 0);
-            var result2 = paramsValidator.TestValidate(geofenceRequestParams, "Get");
-            result.ShouldHaveValidationErrorFor(r => r.Page);
+            var result2 = paramsValidator.TestValidate(geofenceRequestParams2, "Get");
+            result2.ShouldHaveValidationErrorFor(r => r.Page);
         }
 
         [Fact]
@@ -135,7 +131,7 @@ namespace Ranger.Services.Geofences.Tests
 
             var geofenceRequestParams2 = new GeofenceRequestParams("", "", 0, -1);
             var result2 = paramsValidator.TestValidate(geofenceRequestParams, "Get");
-            result.ShouldHaveValidationErrorFor(r => r.PageCount);
+            result2.ShouldHaveValidationErrorFor(r => r.PageCount);
         }
 
         [Fact]
