@@ -10,7 +10,6 @@ namespace Ranger.Services.Geofences
     {
         public static GeoJsonPoint<GeoJson2DGeographicCoordinates> GetPolygonCentroid(IEnumerable<LngLat> coordinates)
         {
-
             var latLngs = coordinates.Reverse().Select(c => S2LatLng.FromDegrees(c.Lat, c.Lng));
             var s2Loop = new S2Loop(latLngs.Select(_ => _.ToPoint()));
             s2Loop.Normalize();
@@ -24,6 +23,5 @@ namespace Ranger.Services.Geofences
             var centroid = new S2LatLng(s2Polygon.Centroid.Value);
             return GeoJson.Point<GeoJson2DGeographicCoordinates>(new GeoJson2DGeographicCoordinates(centroid.LngDegrees, centroid.LatDegrees));
         }
-
     }
 }

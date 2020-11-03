@@ -21,6 +21,7 @@ namespace Ranger.Services.Geofences.Data
         Task PurgeIntegrationFromAllGeofences(string tenantId, Guid projectId, Guid integrationId);
         Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken));
         Task<IEnumerable<Geofence>> GetAllActiveGeofencesForProjectIdsAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken));
-        Task<IEnumerable<Geofence>> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string orderBy = "CreatedDate", string sortOrder = "-1", int page = 1, int pageCount = 100, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Geofence>> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.Descending, int page = 1, int pageCount = 100, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Geofence>> GetGeofencesByBoundingBox(string tenantId, Guid projectId, IEnumerable<LngLat> boundingBox, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.Descending, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

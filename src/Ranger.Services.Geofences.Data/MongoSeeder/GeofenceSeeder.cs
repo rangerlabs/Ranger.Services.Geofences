@@ -41,6 +41,7 @@ namespace Ranger.Services.Geofences.Data {
                 IList<CreateIndexModel<Geofence>> indexModels = new List<CreateIndexModel<Geofence>> ();
                 indexModels.Add (new CreateIndexModel<Geofence> (Builders<Geofence>.IndexKeys.Ascending (_ => _.Shape)));
                 indexModels.Add (new CreateIndexModel<Geofence> (Builders<Geofence>.IndexKeys.Geo2DSphere (_ => _.GeoJsonGeometry)));
+                indexModels.Add (new CreateIndexModel<Geofence> (Builders<Geofence>.IndexKeys.Geo2DSphere (_ => _.PolygonCentroid)));
                 indexModels.Add (new CreateIndexModel<Geofence> (Builders<Geofence>.IndexKeys.Ascending (_ => _.ProjectId).Ascending (_ => _.ExternalId), new CreateIndexOptions () { Unique = true }));
                 indexModels.Add (new CreateIndexModel<Geofence> (Builders<Geofence>.IndexKeys.Ascending (_ => _.TenantId).Ascending (_ => _.ProjectId)));
                 await geofencesCollection.Indexes.CreateManyAsync (indexModels);

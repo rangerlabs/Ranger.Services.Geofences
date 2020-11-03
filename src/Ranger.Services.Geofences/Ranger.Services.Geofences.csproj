@@ -35,8 +35,8 @@
     <PackageReference Include="Ranger.Mongo" Version="2.3.5" />
     <PackageReference Include="Ranger.Monitoring" version="3.2.4" />
     <PackageReference Include="S2Geometry" Version="1.0.3" />
-    <PackageReference Include="Ranger.ApiUtilities" Version="3.6.2" />
-    <PackageReference Include="Ranger.InternalHttpClient" Version="5.1.4" />
+    <PackageReference Include="Ranger.ApiUtilities" Version="3.7.5" />
+    <PackageReference Include="Ranger.InternalHttpClient" Version="5.1.5" />
     <PackageReference Include="Ranger.Redis" version="1.0.4" />
   </ItemGroup>
   <ItemGroup>

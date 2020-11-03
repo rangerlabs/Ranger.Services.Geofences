@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver.GeoJsonObjectModel;
+using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Services.Geofences.Data;
@@ -50,6 +51,7 @@ namespace Ranger.Services.Geofences.Controllers
         ///<param name="sortOrder">The project id to retrieve geofences for</param>
         ///<param name="page">The project id to retrieve geofences for</param>
         ///<param name="pageCount">The project id to retrieve geofences for</param>
+        /// <param name="bounds">The bounding rectangle to retrieve geofences within</param>
         ///<param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/{projectId}")]
@@ -60,9 +62,10 @@ namespace Ranger.Services.Geofences.Controllers
             [FromQuery] string orderBy = OrderByOptions.CreatedDate,
             [FromQuery] string sortOrder = GeofenceSortOrders.DescendingLowerInvariant,
             [FromQuery] int page = 0,
-            [FromQuery] int pageCount = 100)
+            [FromQuery] int pageCount = 100,
+            [FromQuery] [ModelBinder(typeof(SemicolonDelimitedLngLatArrayModelBinder))] IEnumerable<LngLat> bounds = null)
         {
-            var validationResult = paramValidator.Validate(new GeofenceRequestParams(sortOrder, orderBy, page, pageCount), options => options.IncludeRuleSets("Get"));
+            var validationResult = paramValidator.Validate(new GeofenceRequestParams(sortOrder, orderBy, page, pageCount, bounds), options => options.IncludeRuleSets("Get"));
             if (!validationResult.IsValid)
             {
                 var validationErrors = validationResult.Errors.Select(f => new ValidationError(f.PropertyName, f.ErrorMessage));
@@ -71,7 +74,20 @@ namespace Ranger.Services.Geofences.Controllers
 
             try
             {
-                var geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
+                IEnumerable<Geofence> geofences = default;
+                if (bounds is null)
+                {
+                    geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
+                } 
+                else
+                {
+                    geofences = await this.geofenceRepository.GetGeofencesByBoundingBox(tenantId, projectId, bounds, orderBy, sortOrder, cancellationToken);
+                    if (geofences.Count() > 1000)
+                    {
+                        throw new ApiException("More than 1000 geofences exist within the requested bounds. Select a smaller area.");
+                    }
+                }
+
                 var geofenceResponse = new List<GeofenceResponseModel>();
                 foreach (var geofence in geofences)
                 {

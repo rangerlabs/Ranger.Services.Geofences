@@ -7,7 +7,6 @@ using JsonDiffPatchDotNet;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.GeoJsonObjectModel;
 using Newtonsoft.Json;
 using Ranger.Common;
 
@@ -228,6 +227,15 @@ namespace Ranger.Services.Geofences.Data
         private static BsonArray GetCircularSubPipeline(string tenantId, Guid projectId, LngLat lngLat, double accuracy = 0)
         {
             var circularSubPipeline = new BsonArray();
+
+            circularSubPipeline.Add(
+                new BsonDocument{
+                    {"$match", new BsonDocument{
+                        {"TenantId", tenantId},
+                        {"ProjectId", BsonBinaryData.Create(projectId)}
+                    }}
+                });
+
             circularSubPipeline.Add(
                 new BsonDocument{
                     {"$geoNear", new BsonDocument{
@@ -242,6 +250,7 @@ namespace Ranger.Services.Geofences.Data
                         }},
                         {"spherical", true}
                     }}});
+
             circularSubPipeline.Add(
                 new BsonDocument{
                     {"$project", new BsonDocument{
@@ -277,9 +286,8 @@ namespace Ranger.Services.Geofences.Data
                         {"CalculatedDiff", new BsonDocument{
                             {"$lte", 0}
                         }},
-                        {"TenantId", tenantId},
-                        {"ProjectId", BsonBinaryData.Create(projectId)}
-                    }}});
+                    }}
+                });
 
             circularSubPipeline.Add(
                 new BsonDocument{
@@ -315,6 +323,8 @@ namespace Ranger.Services.Geofences.Data
             polygonSubPipeline.Add(
                 new BsonDocument{
                     {"$match", new BsonDocument{
+                        {"TenantId", tenantId},
+                        {"ProjectId", BsonBinaryData.Create(projectId)},
                         {"GeoJsonGeometry", new BsonDocument{
                             {"$geoIntersects", new BsonDocument{
                                 {"$geometry", new BsonDocument{
@@ -322,12 +332,92 @@ namespace Ranger.Services.Geofences.Data
                                     {"coordinates", new BsonArray { lngLat.Lng, lngLat.Lat }}
                                 }}
                             }}
-                        }},
-                        {"TenantId", tenantId},
-                        {"ProjectId", BsonBinaryData.Create(projectId)}
+                        }}
                     }}
                 });
             return polygonSubPipeline;
+        }
+
+        private static BsonArray GetBoundedPolygonGeofences(string tenantId, Guid projectId, IEnumerable<LngLat> boundingRectangle)
+        {
+            var polygonSubPipeline = new BsonArray();
+            polygonSubPipeline.Add(
+                new BsonDocument{
+                    {"$match", new BsonDocument{
+                        {"TenantId", tenantId},
+                        {"ProjectId", BsonBinaryData.Create(projectId)},
+                        {"PolygonCentroid", new BsonDocument{
+                            {"$geoWithin", new BsonDocument{
+                                {"$geometry", new BsonDocument{
+                                    {"type", "Polygon"},
+                                    {"coordinates", new BsonArray{new BsonArray(boundingRectangle.Select(_ => new BsonArray { _.Lng, _.Lat}))}}
+                                }}
+                            }}
+                        }}
+                    }}
+                });
+            return polygonSubPipeline;
+        }
+
+        private static BsonArray GetBoundedCircularGeofences(string tenantId, Guid projectId, IEnumerable<LngLat> boundingRectangle)
+        {
+            var polygonSubPipeline = new BsonArray();
+            polygonSubPipeline.Add(
+                new BsonDocument{
+                    {"$match", new BsonDocument{
+                        {"TenantId", tenantId},
+                        {"ProjectId", BsonBinaryData.Create(projectId)},
+                        {"GeoJsonGeometry", new BsonDocument{
+                            {"$geoWithin", new BsonDocument{
+                                {"$geometry", new BsonDocument{
+                                    {"type", "Polygon"},
+                                    {"coordinates", new BsonArray{new BsonArray(boundingRectangle.Select(_ => new BsonArray{ _.Lng, _.Lat}))}}
+                                }}
+                            }}
+                        }}
+                    }}
+                });
+            return polygonSubPipeline;
+        }
+
+        public async Task<IEnumerable<Geofence>> GetGeofencesByBoundingBox(string tenantId, Guid projectId, IEnumerable<LngLat> boundingBox, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.DescendingLowerInvariant, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var completeBoundingBox = boundingBox.Append(boundingBox.ElementAt(0));
+            var circularLookup = new BsonDocument{
+                {"$lookup", new BsonDocument{
+                    {"from", "geofences"},
+                    {"let", new BsonDocument{}},
+                    {"pipeline", GetBoundedCircularGeofences(tenantId, projectId, completeBoundingBox)},
+                    {"as", "CircularMatches"}
+                }}
+            };
+            var polygonLookup = new BsonDocument{
+                {"$lookup", new BsonDocument{
+                    {"from", "geofences"},
+                    {"let", new BsonDocument{}},
+                    {"pipeline", GetBoundedPolygonGeofences(tenantId, projectId, completeBoundingBox)},
+                    {"as", "PolygonMatches"}
+                }}
+            };
+
+            return await geofenceCollection.Aggregate()
+                .Limit(1)
+                .Project("{_id:1}")
+                .Project("{_id:0}")
+                .AppendStage<Union>(circularLookup)
+                .AppendStage<Union>(polygonLookup)
+                .Project(new BsonDocument{
+                    {"Union", new BsonDocument{
+                        {"$concatArrays", new BsonArray{"$CircularMatches", "$PolygonMatches"}}
+                    }}
+                })
+                .Unwind(x => x["Union"])
+                .ReplaceRoot<Geofence>("$Union")
+                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
+                .Sort(getSortStage(orderBy, sortOrder))
+                .Limit(1000)
+                .As<Geofence>()
+                .ToListAsync(cancellationToken); 
         }
 
         public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string tenantId, Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
@@ -354,7 +444,7 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var geofences = await geofenceCollection.Aggregate()
+            return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
                 .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
                 .Sort(getSortStage(orderBy,sortOrder))
@@ -362,8 +452,6 @@ namespace Ranger.Services.Geofences.Data
                 .Limit(pageCount)
                 .As<Geofence>()
                 .ToListAsync(cancellationToken);
-
-            return geofences;
         }
 
         private string getSortStage(string orderBy, string sortOrder)
@@ -406,7 +494,6 @@ namespace Ranger.Services.Geofences.Data
             else
             {
                 changeLog.GeofenceDiff = JsonConvert.SerializeObject(updatedGeofence);
-
             }
             changeLog.GeofenceId = updatedGeofence.Id;
             changeLog.ProjectId = updatedGeofence.ProjectId;

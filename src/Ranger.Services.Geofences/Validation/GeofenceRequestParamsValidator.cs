@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using FluentValidation;
+using Newtonsoft.Json;
 using Ranger.Common;
 using Ranger.Services.Geofences;
 
@@ -19,7 +20,7 @@ namespace Ranger.Services.Geofences
                     .WithMessage($"OrderBy must be one of {String.Join(',', GetGeofenceSortOrder())}");
                 RuleFor(x => x.OrderByOption)
                     .NotEmpty()
-                     .Must((x) => GetOrderByOptions().Contains(x, StringComparer.InvariantCultureIgnoreCase))
+                    .Must((x) => GetOrderByOptions().Contains(x, StringComparer.InvariantCultureIgnoreCase))
                     .WithMessage($"SortOrder must be one of {String.Join(',', GetOrderByOptions())}");
                 RuleFor(x => x.Page)
                     .GreaterThanOrEqualTo(0);
@@ -27,6 +28,14 @@ namespace Ranger.Services.Geofences
                     .NotEmpty()
                     .GreaterThan(0)
                     .LessThanOrEqualTo(1000);
+                RuleFor(x => x.Bounds)
+                    .Custom((x, c) =>
+                    {
+                        if (!(x is null) && x?.Count() != 4)
+                        {
+                            c.AddFailure("Bounds must contain exactly 4 LngLat objects.");
+                        }
+                    });
             });
         }
 
