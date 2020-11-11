@@ -14,6 +14,12 @@ namespace Ranger.Services.Geofences
         public GeofenceRequestParamsValidator()
         {
             RuleSet("Get", () => {
+                RuleFor(x => x.ExternalId)
+                    .MinimumLength(3)
+                    .MaximumLength(128)
+                    .Matches(RegularExpressions.GEOFENCE_INTEGRATION_NAME)
+                    .WithMessage("Must begin, end, and contain lowercase alphanumeric characters. May contain ( - ).")
+                    .When(x => !String.IsNullOrWhiteSpace(x.ExternalId));
                 RuleFor(x => x.GeofenceSortOrder)
                     .NotEmpty()
                     .Must((x) => GetGeofenceSortOrder().Contains(x, StringComparer.InvariantCultureIgnoreCase))

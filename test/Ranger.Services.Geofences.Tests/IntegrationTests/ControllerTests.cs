@@ -30,6 +30,37 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
        }
 
         [Fact]
+        public async Task GetAllGeofences_ReturnsSingleGeofences_ForValidExternalId()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var externalId = Seed.TenantId1_ProjectId1_Geofences[0].ExternalId;
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?externalId={externalId}");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<GeofenceResponseModel>>(content);
+
+            result.StatusCode.ShouldBe(StatusCodes.Status200OK);
+            result.Result.ExternalId.ShouldBe(externalId);
+       }
+
+        [Fact]
+        public async Task GetAllGeofences_Returns404_ForInvalidExternalId()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var externalId = Seed.TenantId1_ProjectId1_Geofences[0].ExternalId;
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?externalId={Guid.NewGuid().ToString()}");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<GeofenceResponseModel>>(content);
+
+            result.StatusCode.ShouldBe(StatusCodes.Status404NotFound);
+       }
+
+        [Fact]
         public async Task GetAllGeofences_Returns100PaginatedGeofencesSortedByCreatedDateDescending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");

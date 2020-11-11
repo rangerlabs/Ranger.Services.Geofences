@@ -13,7 +13,7 @@ namespace Ranger.Services.Geofences.Data
         Task AddGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix);
         Task UpdateGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix);
         Task DeleteGeofence(string tenantId, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix);
-        Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<Geofence> GetGeofenceOrDefaultAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken));
         Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, Guid geofenceId, CancellationToken cancellationToken = default(CancellationToken));
         Task<IEnumerable<Geofence>> GetGeofencesAsync(string tenantId, Guid projectId, IEnumerable<Guid> geofenceIds, CancellationToken cancellationToken = default(CancellationToken));
         Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string tenantId, Guid projectId, CancellationToken cancellationToken = default(CancellationToken));

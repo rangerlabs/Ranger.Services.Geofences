@@ -5,8 +5,9 @@ namespace Ranger.Services.Geofences
 {
     public class GeofenceRequestParams
     {
-        public GeofenceRequestParams(string geofenceSortOrder, string orderByOption, int page, int pageCount, IEnumerable<LngLat> bounds = null)
+        public GeofenceRequestParams(string externalId, string geofenceSortOrder, string orderByOption, int page, int pageCount, IEnumerable<LngLat> bounds = null)
         {
+            this.ExternalId = externalId;
             this.GeofenceSortOrder = geofenceSortOrder;
             this.OrderByOption = orderByOption;
             this.Page = page;
@@ -14,6 +15,7 @@ namespace Ranger.Services.Geofences
             this.Bounds = bounds;
         }
 
+        public string ExternalId { get; set; }
         public string GeofenceSortOrder { get; set; }
         public string OrderByOption { get; set; }
         public int Page { get; set; }

@@ -129,7 +129,7 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
 
-            var geofence = await GetGeofenceAsync(tenantId, projectId, externalId);
+            var geofence = await GetGeofenceOrDefaultAsync(tenantId, projectId, externalId);
             if (geofence is null)
             {
                 throw new RangerException($"A geofence could not be found for the provided externalId '{externalId}'");
@@ -141,13 +141,12 @@ namespace Ranger.Services.Geofences.Data
             await insertDeletedChangeLog(tenantId, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
         }
 
-        public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Geofence> GetGeofenceOrDefaultAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && g.ExternalId == externalId)
                 .As<Geofence>()
                 .FirstOrDefaultAsync(cancellationToken);
-
         }
 
         public async Task<Geofence> GetGeofenceAsync(string tenantId, Guid projectId, Guid geofenceId, CancellationToken cancellationToken = default(CancellationToken))
