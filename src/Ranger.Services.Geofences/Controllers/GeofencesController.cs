@@ -79,15 +79,18 @@ namespace Ranger.Services.Geofences.Controllers
                 IEnumerable<Geofence> geofences = default;
                 if (!(externalId is null))
                 {
+                    logger.LogDebug("Retrieving geofence by externalId", externalId);
                     var geofence = await this.geofenceRepository.GetGeofenceOrDefaultAsync(tenantId, projectId, externalId, cancellationToken);
                     if (geofence is null)
                     {
                         throw new ApiException($"No geofence found for External Id: {externalId}", StatusCodes.Status404NotFound);
                     }
-                    return new ApiResponse("Successfully retrieved geofence", geofence);
+
+                    return new ApiResponse("Successfully retrieved geofence", GetResponseModel(geofence));
                 }
                 else if (!(bounds is null))
                 {
+                    logger.LogDebug("Retrieving bounded geofences", externalId);
                     geofences = await this.geofenceRepository.GetGeofencesByBoundingBox(tenantId, projectId, bounds, orderBy, sortOrder, cancellationToken);
                     if (geofences.Count() > 1000)
                     {
@@ -96,34 +99,15 @@ namespace Ranger.Services.Geofences.Controllers
                 }
                 else
                 {
+                    logger.LogDebug("Retrieving paginated geofences", externalId);
                     geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
                 }
 
                 var geofenceResponse = new List<GeofenceResponseModel>();
-                foreach (var geofence in geofences)
+                foreach(var geofence in geofences)
                 {
-                    geofenceResponse.Add(new GeofenceResponseModel
-                    {
-                        Id = geofence.Id,
-                        Enabled = geofence.Enabled,
-                        Description = geofence.Description,
-                        ExpirationDate = geofence.ExpirationDate,
-                        ExternalId = geofence.ExternalId,
-                        Coordinates = getCoordinatesByShape(geofence.Shape, geofence.GeoJsonGeometry),
-                        IntegrationIds = geofence.IntegrationIds,
-                        Labels = geofence.Labels,
-                        LaunchDate = geofence.LaunchDate,
-                        Metadata = geofence.Metadata,
-                        OnEnter = geofence.OnEnter,
-                        OnDwell = geofence.OnDwell,
-                        OnExit = geofence.OnExit,
-                        ProjectId = geofence.ProjectId,
-                        Radius = geofence.Radius,
-                        Schedule = Schedule.IsUtcFullSchedule(geofence.Schedule) ? null : geofence.Schedule,
-                        Shape = geofence.Shape,
-                        CreatedDate = geofence.CreatedDate,
-                        UpdatedDate = geofence.UpdatedDate
-                    });
+                    geofenceResponse.Add(this.GetResponseModel(geofence));
+
                 }
                 return new ApiResponse("Successfully retrieved geofences", geofenceResponse);
             }
@@ -138,7 +122,34 @@ namespace Ranger.Services.Geofences.Controllers
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
+        
+        private GeofenceResponseModel GetResponseModel(Geofence geofence)
+        {
+            return new GeofenceResponseModel
+            {
+                Id = geofence.Id,
+                Enabled = geofence.Enabled,
+                Description = geofence.Description,
+                ExpirationDate = geofence.ExpirationDate,
+                ExternalId = geofence.ExternalId,
+                Coordinates = getCoordinatesByShape(geofence.Shape, geofence.GeoJsonGeometry),
+                IntegrationIds = geofence.IntegrationIds,
+                Labels = geofence.Labels,
+                LaunchDate = geofence.LaunchDate,
+                Metadata = geofence.Metadata,
+                OnEnter = geofence.OnEnter,
+                OnDwell = geofence.OnDwell,
+                OnExit = geofence.OnExit,
+                ProjectId = geofence.ProjectId,
+                Radius = geofence.Radius,
+                Schedule = Schedule.IsUtcFullSchedule(geofence.Schedule) ? null : geofence.Schedule,
+                Shape = geofence.Shape,
+                CreatedDate = geofence.CreatedDate,
+                UpdatedDate = geofence.UpdatedDate
+            };
+        }
 
+        
         ///<summary>
         /// Get all geofences that are in use by an active project
         ///</summary>
