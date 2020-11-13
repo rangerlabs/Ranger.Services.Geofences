@@ -262,6 +262,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             }
         }
 
+
         [Fact]
         public async Task GetAllGeofences_ReturnAllGeofences_InBoundingBox()
         {
@@ -282,6 +283,28 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
 
             var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
             result.Result.Count().ShouldBe(Seed.TenantId1_ProjectId1_Geofences.Count());
+        }
+
+        [Fact]
+        public async Task GetAllGeofences_ReturnNoGeofences_WhenBoundingBoxNewYork()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var bounds = new List<LngLat>
+                {
+                    new LngLat(-73.98022359345703, 40.71905316959156),
+                    new LngLat(-74.03172200654296, 40.71905316959156),
+                    new LngLat(-74.03172200654296, 40.70649683843022),
+                    new LngLat(-73.98022359345703, 40.70649683843022)
+                }.Select(f => JsonConvert.SerializeObject(f));
+            var queryBounds = String.Join(';', bounds);
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?bounds={queryBounds}");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
+            result.Result.Count().ShouldBe(0);
         }
 
         [Fact]
