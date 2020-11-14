@@ -455,7 +455,7 @@ namespace Ranger.Services.Geofences.Data
 
         private string getSortStage(string orderBy, string sortOrder)
         {
-            return orderBy == OrderByOptions.CreatedDate ? 
+            return orderBy.ToLowerInvariant() == OrderByOptions.CreatedDateLowerInvariant   ? 
             "{"+ OrderByOptions.NamingMap(orderBy) +":"+ GeofenceSortOrders.SortOrderMap(sortOrder) +"}" 
             : "{"+ OrderByOptions.NamingMap(orderBy) +":"+ GeofenceSortOrders.SortOrderMap(sortOrder) + ", " + OrderByOptions.CreatedDate +":"+ GeofenceSortOrders.Descending +"}";
         }
