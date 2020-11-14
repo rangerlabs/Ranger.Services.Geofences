@@ -79,7 +79,7 @@ namespace Ranger.Services.Geofences.Controllers
                 IEnumerable<Geofence> geofences = default;
                 if (!(externalId is null))
                 {
-                    logger.LogDebug("Retrieving geofence by externalId", externalId);
+                    logger.LogInformation("Retrieving geofence by externalId", externalId);
                     var geofence = await this.geofenceRepository.GetGeofenceOrDefaultAsync(tenantId, projectId, externalId, cancellationToken);
                     if (geofence is null)
                     {
@@ -90,7 +90,7 @@ namespace Ranger.Services.Geofences.Controllers
                 }
                 else if (!(bounds is null))
                 {
-                    logger.LogDebug("Retrieving bounded geofences", externalId);
+                    logger.LogInformation("Retrieving bounded geofences", externalId);
                     geofences = await this.geofenceRepository.GetGeofencesByBoundingBox(tenantId, projectId, bounds, orderBy, sortOrder, cancellationToken);
                     if (geofences.Count() > 1000)
                     {
@@ -99,7 +99,7 @@ namespace Ranger.Services.Geofences.Controllers
                 }
                 else
                 {
-                    logger.LogDebug("Retrieving paginated geofences", externalId);
+                    logger.LogInformation("Retrieving paginated geofences", externalId);
                     geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
                 }
 
