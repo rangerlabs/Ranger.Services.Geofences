@@ -240,6 +240,33 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             }
         }
 
+
+        [Fact]
+        public async Task GetGeofenceCountForProjects_Returns0_ForInValidProjectId()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Guid.NewGuid()}/count");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<long>>(content);
+            result.Result.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task GetGeofenceCountForProjects_ReturnsCount_ForValidTenantAndProjectIds()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}/count");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<long>>(content);
+            result.Result.ShouldBe(Seed.TenantId1_ProjectId1_Geofences.Count());
+        }
+
         [Fact]
         public async Task GetAllGeofences_Returns1PaginatedGeofencesFromPage10_ForValidTenantAndProjectIds()
         {
@@ -261,7 +288,6 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
                 actual.ExternalId.ShouldBe(expected.ExternalId);
             }
         }
-
 
         [Fact]
         public async Task GetAllGeofences_ReturnAllGeofences_InBoundingBox()

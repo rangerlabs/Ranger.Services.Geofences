@@ -149,12 +149,34 @@ namespace Ranger.Services.Geofences.Controllers
             };
         }
 
-        
         ///<summary>
         /// Get all geofences that are in use by an active project
         ///</summary>
         ///<param name="tenantId">The tenant id to retrieve geofences for</param>
-        /// <param name="cancellationToken"></param>
+        ///<param name="projectId">The project id to retrieve geofences for</param>
+        ///<param name="cancellationToken"></param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/geofences/{tenantId}/{projectId}/count")]
+        public async Task<ApiResponse> GetAllGeofenceCount(string tenantId, Guid projectId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var geofences = await geofenceRepository.GetGeofencesCountForProjectAsync(tenantId, projectId, cancellationToken);
+                return new ApiResponse("Successfully calculated geofence count for project", geofences);
+            }
+            catch (Exception ex)
+            {
+                var message = "Failed to retrieve geofence count for project";
+                this.logger.LogError(ex, message);
+                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
+            }
+        }
+        
+        ///<summary>
+        /// Get all geofences that are in use by an active tenant
+        ///</summary>
+        ///<param name="tenantId">The tenant id to retrieve geofences for</param>
+        ///<param name="cancellationToken"></param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/count")]
         public async Task<ApiResponse> GetAllGeofenceCount(string tenantId, CancellationToken cancellationToken)

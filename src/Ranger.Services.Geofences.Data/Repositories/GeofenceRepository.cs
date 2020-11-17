@@ -179,6 +179,15 @@ namespace Ranger.Services.Geofences.Data
             return result?.Count ?? 0;
         }
 
+        public async Task<long> GetGeofencesCountForProjectAsync(string tenantId, Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var result = await geofenceCollection.Aggregate()
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
+                .Count()
+                .SingleOrDefaultAsync(cancellationToken);
+            return result?.Count ?? 0;
+        }
+
         public async Task<IEnumerable<Geofence>> GetAllActiveGeofencesForProjectIdsAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await geofenceCollection.Aggregate()
