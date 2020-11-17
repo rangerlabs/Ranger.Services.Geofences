@@ -100,7 +100,13 @@ namespace Ranger.Services.Geofences.Controllers
                 else
                 {
                     logger.LogInformation("Retrieving paginated geofences", externalId);
-                    geofences = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
+                    var (paginatedGeofences, totalCount) = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
+                    geofences = paginatedGeofences;
+                    Response.Headers.Add("X-Total-Count", totalCount.ToString());
+                    Response.Headers.Add("X-Pagination-Count", pageCount.ToString());
+                    Response.Headers.Add("X-Pagination-Page", page.ToString());
+                    Response.Headers.Add("X-Pagination-OrderBy", orderBy.ToString());
+                    Response.Headers.Add("X-Pagination-Sort", sortOrder.ToString());
                 }
 
                 var geofenceResponse = new List<GeofenceResponseModel>();
@@ -123,6 +129,7 @@ namespace Ranger.Services.Geofences.Controllers
             }
         }
         
+
         private GeofenceResponseModel GetResponseModel(Geofence geofence)
         {
             return new GeofenceResponseModel
@@ -147,6 +154,35 @@ namespace Ranger.Services.Geofences.Controllers
                 CreatedDate = geofence.CreatedDate,
                 UpdatedDate = geofence.UpdatedDate
             };
+        }
+
+        ///<summary>
+        /// Search for geofences by external id
+        ///</summary>
+        ///<param name="tenantId">The tenant id to retrieve geofences for</param>
+        ///<param name="projectId">The project id to retrieve geofences for</param>
+        ///<param name="search">The search term</param>
+        ///<param name="cancellationToken"></param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/geofences/{tenantId}/{projectId}")]
+        public async Task<ApiResponse> SearchForGeofence(string tenantId, Guid projectId, string search, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var geofences = await geofenceRepository.SearchGeofencesAsync(tenantId, projectId, search, cancellationToken);
+                var geofenceResponse = new List<GeofenceResponseModel>();
+                foreach(var geofence in geofences)
+                {
+                    geofenceResponse.Add(this.GetResponseModel(geofence));
+                }
+                return new ApiResponse("Successfully searched for geofence", geofenceRepository);
+            }
+            catch (Exception ex)
+            {
+                var message = "Failed to search for geofences";
+                this.logger.LogError(ex, message);
+                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
+            }
         }
 
         ///<summary>
