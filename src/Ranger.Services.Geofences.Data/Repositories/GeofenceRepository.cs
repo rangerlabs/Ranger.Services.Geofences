@@ -170,13 +170,6 @@ namespace Ranger.Services.Geofences.Data
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<Geofence>> SearchGeofencesAsync(string tenantId, Guid projectId, string search, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return await geofenceCollection.Aggregate()
-                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && g.ExternalId.StartsWith(search))
-                .SortByDescending(c => c.CreatedDate)
-                .ToListAsync(cancellationToken);
-        }
 
         public async Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -453,16 +446,22 @@ namespace Ranger.Services.Geofences.Data
             return geofences;
         }
 
-        public async Task<(IEnumerable<Geofence> geofences, long totalCount)> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.DescendingLowerInvariant, int page = 1, int pageCount = 100, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<(IEnumerable<Geofence> geofences, long totalCount)> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string search = null, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.DescendingLowerInvariant, int page = 1, int pageCount = 100, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var geofences = await geofenceCollection.Aggregate()
-                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
-                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
+            var fluentAggregate = geofenceCollection.Aggregate()
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId);
+
+            if (!String.IsNullOrWhiteSpace(search))
+            {
+                fluentAggregate.Match(g => g.ExternalId.StartsWith(search));
+            }
+                
+            var geofences = await fluentAggregate.Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
                 .Sort(getSortStage(orderBy,sortOrder))
                 .Skip(page * pageCount)
                 .Limit(pageCount)

@@ -20,6 +20,12 @@ namespace Ranger.Services.Geofences
                     .Matches(RegularExpressions.GEOFENCE_INTEGRATION_NAME)
                     .WithMessage("Must begin, end, and contain lowercase alphanumeric characters. May contain ( - ).")
                     .When(x => !String.IsNullOrWhiteSpace(x.ExternalId));
+                RuleFor(x => x.Search)
+                    .MinimumLength(1)
+                    .MaximumLength(128)
+                    .Matches(RegularExpressions.GEOFENCE_SEARCH_NAME)
+                    .WithMessage("Must begin, end, and contain lowercase alphanumeric characters. May contain ( - ).")
+                    .When(x => !String.IsNullOrWhiteSpace(x.ExternalId));
                 RuleFor(x => x.GeofenceSortOrder)
                     .NotEmpty()
                     .Must((x) => GetGeofenceSortOrder().Contains(x, StringComparer.InvariantCultureIgnoreCase))

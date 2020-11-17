@@ -54,6 +54,7 @@ namespace Ranger.Services.Geofences.Controllers
         /// <param name="bounds">The bounding rectangle to retrieve geofences within</param>
         ///<param name="cancellationToken"></param>
         /// <param name="externalId">The externalId to query for</param>
+        /// <param name="search">The external id to search for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/geofences/{tenantId}/{projectId}")]
         public async Task<ApiResponse> GetAllGeofences(
@@ -61,13 +62,14 @@ namespace Ranger.Services.Geofences.Controllers
             Guid projectId,
             CancellationToken cancellationToken,
             [FromQuery] string externalId = null,
+            [FromQuery] string search = null,
             [FromQuery] string orderBy = OrderByOptions.CreatedDate,
             [FromQuery] string sortOrder = GeofenceSortOrders.DescendingLowerInvariant,
             [FromQuery] int page = 0,
             [FromQuery] int pageCount = 100,
             [FromQuery] [ModelBinder(typeof(SemicolonDelimitedLngLatArrayModelBinder))] IEnumerable<LngLat> bounds = null)
         {
-            var validationResult = paramValidator.Validate(new GeofenceRequestParams(externalId, sortOrder, orderBy, page, pageCount, bounds), options => options.IncludeRuleSets("Get"));
+            var validationResult = paramValidator.Validate(new GeofenceRequestParams(externalId, search, sortOrder, orderBy, page, pageCount, bounds), options => options.IncludeRuleSets("Get"));
             if (!validationResult.IsValid)
             {
                 var validationErrors = validationResult.Errors.Select(f => new ValidationError(f.PropertyName, f.ErrorMessage));
@@ -100,7 +102,7 @@ namespace Ranger.Services.Geofences.Controllers
                 else
                 {
                     logger.LogInformation("Retrieving paginated geofences", externalId);
-                    var (paginatedGeofences, totalCount) = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, orderBy, sortOrder, page, pageCount, cancellationToken);
+                    var (paginatedGeofences, totalCount) = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, search, orderBy, sortOrder, page, pageCount, cancellationToken);
                     geofences = paginatedGeofences;
                     Response.Headers.Add("X-Total-Count", totalCount.ToString());
                     Response.Headers.Add("X-Pagination-Count", pageCount.ToString());
@@ -154,35 +156,6 @@ namespace Ranger.Services.Geofences.Controllers
                 CreatedDate = geofence.CreatedDate,
                 UpdatedDate = geofence.UpdatedDate
             };
-        }
-
-        ///<summary>
-        /// Search for geofences by external id
-        ///</summary>
-        ///<param name="tenantId">The tenant id to retrieve geofences for</param>
-        ///<param name="projectId">The project id to retrieve geofences for</param>
-        ///<param name="search">The search term</param>
-        ///<param name="cancellationToken"></param>
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet("/geofences/{tenantId}/{projectId}")]
-        public async Task<ApiResponse> SearchForGeofence(string tenantId, Guid projectId, string search, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var geofences = await geofenceRepository.SearchGeofencesAsync(tenantId, projectId, search, cancellationToken);
-                var geofenceResponse = new List<GeofenceResponseModel>();
-                foreach(var geofence in geofences)
-                {
-                    geofenceResponse.Add(this.GetResponseModel(geofence));
-                }
-                return new ApiResponse("Successfully searched for geofence", geofenceRepository);
-            }
-            catch (Exception ex)
-            {
-                var message = "Failed to search for geofences";
-                this.logger.LogError(ex, message);
-                throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
-            }
         }
 
         ///<summary>

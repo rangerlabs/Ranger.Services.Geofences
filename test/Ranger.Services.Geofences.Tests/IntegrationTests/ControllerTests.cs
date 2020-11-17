@@ -27,7 +27,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         {
             _factory = fixture.Factory;
             _fixture = fixture.Fixture;
-       }
+        }
 
         [Fact]
         public async Task GetAllGeofences_ReturnsSingleGeofences_ForValidExternalId()
@@ -43,7 +43,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
 
             result.StatusCode.ShouldBe(StatusCodes.Status200OK);
             result.Result.ExternalId.ShouldBe(externalId);
-       }
+        }
 
         [Fact]
         public async Task GetAllGeofences_Returns404_ForInvalidExternalId()
@@ -58,7 +58,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             var result = JsonConvert.DeserializeObject<RangerApiResponse<GeofenceResponseModel>>(content);
 
             result.StatusCode.ShouldBe(StatusCodes.Status404NotFound);
-       }
+        }
 
         [Fact]
         public async Task GetAllGeofences_Returns100PaginatedGeofencesSortedByCreatedDateDescending_ForValidTenantAndProjectIds()
@@ -366,13 +366,13 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
 
             var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
             result.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
-       }
+        }
 
         [Fact]
         public async Task GetAllGeofences_Returns500_ForRepositoryException()
         {
             var mockRepo = new Mock<IGeofenceRepository>();
-            mockRepo.Setup(r => r.GetPaginatedGeofencesByProjectId(Seed.TenantId1, Seed.TenantId1_ProjectId1, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
+            mockRepo.Setup(r => r.GetPaginatedGeofencesByProjectId(Seed.TenantId1, Seed.TenantId1_ProjectId1, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             var client = _factory.WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
@@ -380,7 +380,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
                     services.AddTransient<IGeofenceRepository>((_) => mockRepo.Object);
                     services.AddAuthentication("Test")
                         .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                            "Test", options => {});
+                            "Test", options => { });
                 });
             }).CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
