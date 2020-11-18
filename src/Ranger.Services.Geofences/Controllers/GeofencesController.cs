@@ -105,7 +105,7 @@ namespace Ranger.Services.Geofences.Controllers
                     var (paginatedGeofences, totalCount) = await this.geofenceRepository.GetPaginatedGeofencesByProjectId(tenantId, projectId, search, orderBy, sortOrder, page, pageCount, cancellationToken);
                     geofences = paginatedGeofences;
                     Response.Headers.Add("X-Total-Count", totalCount.ToString());
-                    Response.Headers.Add("X-Pagination-Count", pageCount.ToString());
+                    Response.Headers.Add("X-Pagination-Page-Count", pageCount.ToString());
                     Response.Headers.Add("X-Pagination-Page", page.ToString());
                     Response.Headers.Add("X-Pagination-OrderBy", orderBy.ToString());
                     Response.Headers.Add("X-Pagination-Sort", sortOrder.ToString());

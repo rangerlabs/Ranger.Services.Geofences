@@ -298,7 +298,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}");
 
             response.Headers.ShouldContain(h => h.Key == "X-Total-Count" && h.Value.Contains(Seed.TenantId1_ProjectId1_Geofences.Count().ToString()));
-            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Count" && h.Value.Contains("100"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Page-Count" && h.Value.Contains("100"));
             response.Headers.ShouldContain(h => h.Key == "X-Pagination-Page" && h.Value.Contains("0"));
             response.Headers.ShouldContain(h => h.Key == "X-Pagination-OrderBy" && h.Value.Contains("CreatedDate"));
             response.Headers.ShouldContain(h => h.Key == "X-Pagination-Sort" && h.Value.Contains("desc"));
@@ -313,7 +313,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
             var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?page=1&pageCount=10&orderBy=ExternalId&sortOrder=asc");
 
             response.Headers.ShouldContain(h => h.Key == "X-Total-Count" && h.Value.Contains(Seed.TenantId1_ProjectId1_Geofences.Count().ToString()));
-            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Count" && h.Value.Contains("10"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Page-Count" && h.Value.Contains("10"));
             response.Headers.ShouldContain(h => h.Key == "X-Pagination-Page" && h.Value.Contains("1"));
             response.Headers.ShouldContain(h => h.Key == "X-Pagination-OrderBy" && h.Value.Contains("ExternalId"));
             response.Headers.ShouldContain(h => h.Key == "X-Pagination-Sort" && h.Value.Contains("asc"));
