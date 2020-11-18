@@ -67,7 +67,7 @@ namespace Ranger.Services.Geofences.Controllers
             [FromQuery] string sortOrder = GeofenceSortOrders.DescendingLowerInvariant,
             [FromQuery] int page = 0,
             [FromQuery] int pageCount = 100,
-            [FromQuery] [ModelBinder(typeof(SemicolonDelimitedLngLatArrayModelBinder))] IEnumerable<LngLat> bounds = null)
+            [FromQuery][ModelBinder(typeof(SemicolonDelimitedLngLatArrayModelBinder))] IEnumerable<LngLat> bounds = null)
         {
             var validationResult = paramValidator.Validate(new GeofenceRequestParams(externalId, search, sortOrder, orderBy, page, pageCount, bounds), options => options.IncludeRuleSets("Get"));
             if (!validationResult.IsValid)
@@ -112,7 +112,7 @@ namespace Ranger.Services.Geofences.Controllers
                 }
 
                 var geofenceResponse = new List<GeofenceResponseModel>();
-                foreach(var geofence in geofences)
+                foreach (var geofence in geofences)
                 {
                     geofenceResponse.Add(this.GetResponseModel(geofence));
 
@@ -130,7 +130,7 @@ namespace Ranger.Services.Geofences.Controllers
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
-        
+
 
         private GeofenceResponseModel GetResponseModel(Geofence geofence)
         {
@@ -180,7 +180,7 @@ namespace Ranger.Services.Geofences.Controllers
                 throw new ApiException(message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
-        
+
         ///<summary>
         /// Get all geofences that are in use by an active tenant
         ///</summary>

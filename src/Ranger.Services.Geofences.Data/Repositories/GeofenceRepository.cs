@@ -426,7 +426,7 @@ namespace Ranger.Services.Geofences.Data
                 .Sort(getSortStage(orderBy, sortOrder))
                 .Limit(1000)
                 .As<Geofence>()
-                .ToListAsync(cancellationToken); 
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<Geofence>> GetAllGeofencesByProjectId(string tenantId, Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
@@ -458,11 +458,11 @@ namespace Ranger.Services.Geofences.Data
 
             if (!String.IsNullOrWhiteSpace(search))
             {
-                fluentAggregate.Match(g => g.ExternalId.StartsWith(search));
+                fluentAggregate = fluentAggregate.Match(g => g.ExternalId.StartsWith(search));
             }
-                
+
             var geofences = await fluentAggregate.Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
-                .Sort(getSortStage(orderBy,sortOrder))
+                .Sort(getSortStage(orderBy, sortOrder))
                 .Skip(page * pageCount)
                 .Limit(pageCount)
                 .As<Geofence>()
@@ -477,9 +477,9 @@ namespace Ranger.Services.Geofences.Data
 
         private string getSortStage(string orderBy, string sortOrder)
         {
-            return orderBy.ToLowerInvariant() == OrderByOptions.CreatedDateLowerInvariant   ? 
-            "{"+ OrderByOptions.NamingMap(orderBy) +":"+ GeofenceSortOrders.SortOrderMap(sortOrder) +"}" 
-            : "{"+ OrderByOptions.NamingMap(orderBy) +":"+ GeofenceSortOrders.SortOrderMap(sortOrder) + ", " + OrderByOptions.CreatedDate +":"+ GeofenceSortOrders.Descending +"}";
+            return orderBy.ToLowerInvariant() == OrderByOptions.CreatedDateLowerInvariant ?
+            "{" + OrderByOptions.NamingMap(orderBy) + ":" + GeofenceSortOrders.SortOrderMap(sortOrder) + "}"
+            : "{" + OrderByOptions.NamingMap(orderBy) + ":" + GeofenceSortOrders.SortOrderMap(sortOrder) + ", " + OrderByOptions.CreatedDate + ":" + GeofenceSortOrders.Descending + "}";
         }
 
 

@@ -30,7 +30,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_ReturnsSingleGeofences_ForValidExternalId()
+        public async Task GetGeofences_ReturnsSingleGeofences_ForValidExternalId()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -46,7 +46,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns404_ForInvalidExternalId()
+        public async Task GetGeofences_Returns404_ForInvalidExternalId()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -61,7 +61,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns100PaginatedGeofencesSortedByCreatedDateDescending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns100PaginatedGeofencesSortedByCreatedDateDescending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -83,7 +83,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns100PaginatedGeofencesSortedByCreatedDateAscending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns100PaginatedGeofencesSortedByCreatedDateAscending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -107,7 +107,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns50PaginatedGeofencesSortedByCreatedDateAscending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns50PaginatedGeofencesSortedByCreatedDateAscending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -131,7 +131,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns10PaginatedGeofencesSortedByExternalIdAscending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns10PaginatedGeofencesSortedByExternalIdAscending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -153,7 +153,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns10PaginatedGeofencesSortedByExternalIdDescending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns10PaginatedGeofencesSortedByExternalIdDescending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -175,7 +175,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns10PaginatedGeofencesSortedByShapeAscending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns10PaginatedGeofencesSortedByShapeAscending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -197,7 +197,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns10PaginatedGeofencesSortedByShapeDescending_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns10PaginatedGeofencesSortedByShapeDescending_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -219,7 +219,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns10PaginatedGeofencesFromPage2_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns10PaginatedGeofencesFromPage2_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -268,7 +268,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns1PaginatedGeofencesFromPage10_ForValidTenantAndProjectIds()
+        public async Task GetGeofences_Returns1PaginatedGeofencesFromPage10_ForValidTenantAndProjectIds()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -290,7 +290,37 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_ReturnAllGeofences_InBoundingBox()
+        public async Task GetGeofences_ReturnsPaginationHeaders_WhenPaginated()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}");
+
+            response.Headers.ShouldContain(h => h.Key == "X-Total-Count" && h.Value.Contains(Seed.TenantId1_ProjectId1_Geofences.Count().ToString()));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Count" && h.Value.Contains("100"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Page" && h.Value.Contains("0"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-OrderBy" && h.Value.Contains("CreatedDate"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Sort" && h.Value.Contains("desc"));
+        }
+
+        [Fact]
+        public async Task GetGeofences_ReturnsRequestedPaginationHeaders_WhenPaginated()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?page=1&pageCount=10&orderBy=ExternalId&sortOrder=asc");
+
+            response.Headers.ShouldContain(h => h.Key == "X-Total-Count" && h.Value.Contains(Seed.TenantId1_ProjectId1_Geofences.Count().ToString()));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Count" && h.Value.Contains("10"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Page" && h.Value.Contains("1"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-OrderBy" && h.Value.Contains("ExternalId"));
+            response.Headers.ShouldContain(h => h.Key == "X-Pagination-Sort" && h.Value.Contains("asc"));
+        }
+
+        [Fact]
+        public async Task GetGeofences_ReturnAllGeofences_InBoundingBox()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -312,7 +342,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_ReturnNoGeofences_WhenBoundingBoxNewYork()
+        public async Task GetGeofences_ReturnNoGeofences_WhenBoundingBoxNewYork()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -334,7 +364,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_ReturnNoGeofences_OutsideBoundingBox()
+        public async Task GetGeofences_ReturnNoGeofences_OutsideBoundingBox()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -356,7 +386,76 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns400_WhenInvalidParam()
+        public async Task GetGeofences_Returns200With1Geofences_WhenSearchIsHighestExternalId()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var bounds = new List<LngLat>
+                {
+                    new LngLat(-81.80283, 41.38295),
+                    new LngLat(-81.80351, 41.33273),
+                    new LngLat(-81.67748, 41.33298),
+                    new LngLat(-81.68022, 41.39067)
+                }.Select(f => JsonConvert.SerializeObject(f));
+            var queryBounds = String.Join(';', bounds);
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?search={Seed.TenantId1_ProjectId1_Geofences.ElementAt(100).ExternalId}");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
+            result.StatusCode.ShouldBe(StatusCodes.Status200OK);
+            result.Result.Count().ShouldBe(1);
+            result.Result.ElementAt(0).ExternalId.ShouldBe(Seed.TenantId1_ProjectId1_Geofences.ElementAt(100).ExternalId);
+        }
+
+        [Fact]
+        public async Task GetGeofences_Returns200WithAllGeofences_WhenSearchIsProject()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var bounds = new List<LngLat>
+                {
+                    new LngLat(-81.80283, 41.38295),
+                    new LngLat(-81.80351, 41.33273),
+                    new LngLat(-81.67748, 41.33298),
+                    new LngLat(-81.68022, 41.39067)
+                }.Select(f => JsonConvert.SerializeObject(f));
+            var queryBounds = String.Join(';', bounds);
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?search=tenants-1-project-1&pageCount=200");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
+            result.StatusCode.ShouldBe(StatusCodes.Status200OK);
+            result.Result.Count().ShouldBe(Seed.TenantId1_ProjectId1_Geofences.Count());
+        }
+
+        [Fact]
+        public async Task GetGeofences_Returns400_WhenExternalIdAndBounds()
+        {
+            _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
+
+            var bounds = new List<LngLat>
+                {
+                    new LngLat(-81.80283, 41.38295),
+                    new LngLat(-81.80351, 41.33273),
+                    new LngLat(-81.67748, 41.33298),
+                    new LngLat(-81.68022, 41.39067)
+                }.Select(f => JsonConvert.SerializeObject(f));
+            var queryBounds = String.Join(';', bounds);
+
+            var response = await _fixture.httpClient.GetAsync($"/geofences/{Seed.TenantId1}/{Seed.TenantId1_ProjectId1}?externalId=123&bounds={queryBounds}");
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<RangerApiResponse<IEnumerable<GeofenceResponseModel>>>(content);
+            result.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+        }
+
+        [Fact]
+        public async Task GetGeofences_Returns400_WhenInvalidParam()
         {
             _fixture.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             _fixture.httpClient.DefaultRequestHeaders.Add("api-version", "1.0");
@@ -369,7 +468,7 @@ namespace Ranger.Services.Geofences.Tests.IntegrationTests
         }
 
         [Fact]
-        public async Task GetAllGeofences_Returns500_ForRepositoryException()
+        public async Task GetGeofences_Returns500_ForRepositoryException()
         {
             var mockRepo = new Mock<IGeofenceRepository>();
             mockRepo.Setup(r => r.GetPaginatedGeofencesByProjectId(Seed.TenantId1, Seed.TenantId1_ProjectId1, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());

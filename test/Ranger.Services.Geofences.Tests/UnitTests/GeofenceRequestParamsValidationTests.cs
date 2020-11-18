@@ -78,6 +78,83 @@ namespace Ranger.Services.Geofences.Tests
             result.ShouldNotHaveValidationErrorFor(r => r.ExternalId);
         }
 
+        [Theory]
+        [InlineData("a")]
+        [InlineData("A")]
+        [InlineData("z")]
+        [InlineData("Z")]
+        [InlineData("-")]
+        [InlineData("0")]
+        [InlineData("a-0")]
+        [InlineData("0-a")]
+        [InlineData("aa0")]
+        [InlineData("Aa0")]
+        [InlineData("ZA0")]
+        [InlineData("a00")]
+        [InlineData("0aa")]
+        [InlineData("00a")]
+        public void Search_Should_NOT_Have_Error_When_Passes_Regex(string search)
+        {
+            var geofenceRequestParams = new GeofenceRequestParams("", search, "", "", 0, 0);
+            var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
+            result.ShouldNotHaveValidationErrorFor(r => r.Search);
+        }
+
+        [Theory]
+        [InlineData("`")]
+        [InlineData("~")]
+        [InlineData("!")]
+        [InlineData("@")]
+        [InlineData("#")]
+        [InlineData("$")]
+        [InlineData("%")]
+        [InlineData("^")]
+        [InlineData("&")]
+        [InlineData("*")]
+        [InlineData("(")]
+        [InlineData(")")]
+        [InlineData("_")]
+        [InlineData("+")]
+        [InlineData("=")]
+        [InlineData("{")]
+        [InlineData("}")]
+        [InlineData("[")]
+        [InlineData("]")]
+        [InlineData("|")]
+        [InlineData("\\")]
+        [InlineData(":")]
+        [InlineData(";")]
+        [InlineData(@"""")]
+        [InlineData("'")]
+        [InlineData("?")]
+        [InlineData("/")]
+        [InlineData(".")]
+        [InlineData(",")]
+        public void Search_Should_Have_Error_When_Fails_Regex(string search)
+        {
+            var geofenceRequestParams = new GeofenceRequestParams("", search, "", "", 0, 0);
+            var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
+            result.ShouldHaveValidationErrorFor(r => r.Search);
+        }
+
+
+        [Fact]
+        public void Search_Should_Have_Error_When_Greater_Than_128_Characters()
+        {
+            var geofenceRequestParams = new GeofenceRequestParams("", new string('a', 129), "", "", 0, 0);
+            var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
+            result.ShouldHaveValidationErrorFor(r => r.Search);
+        }
+
+        [Fact]
+        public void Search_Should_Have_No_Error_When_128_Characters_Or_Less()
+        {
+            var geofenceRequestParams = new GeofenceRequestParams("", new string('a', 128), "", "", 0, 0);
+            var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
+            result.ShouldHaveValidationErrorFor(r => r.GeofenceSortOrder);
+        }
+
+
         [Fact]
         public void GeofenceSortOrder_HasValidationError_WhenEmpty()
         {
@@ -231,6 +308,21 @@ namespace Ranger.Services.Geofences.Tests
             var geofenceRequestParams = new GeofenceRequestParams(null, "", "", "", 1, 1, null);
             var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
             result.ShouldNotHaveValidationErrorFor(r => r.Bounds);
+        }
+
+
+        [Fact]
+        public void Bounds_HasValidationError_WhenExternalIdAndBoundsPresent()
+        {
+            var geofenceRequestParams = new GeofenceRequestParams("123", "", "", "", 1, 1, new List<LngLat>
+                {
+                    new LngLat(-81.61998, 41.54433),
+                    new LngLat(-81.61724, 41.45489),
+                    new LngLat(-81.47300, 41.45386),
+                    new LngLat(-81.46888, 41.56693)
+                });
+            var result = paramsValidator.TestValidate(geofenceRequestParams, "Get");
+            result.ShouldHaveValidationErrorFor(r => r);
         }
 
         [Fact]
