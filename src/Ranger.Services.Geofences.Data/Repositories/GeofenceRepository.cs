@@ -453,25 +453,25 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var fluentAggregate = geofenceCollection.Aggregate()
-                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId);
-
+            var geofencesPipeline = geofenceCollection.Aggregate().Match(g => g.TenantId == tenantId && g.ProjectId == projectId);
             if (!String.IsNullOrWhiteSpace(search))
             {
-                fluentAggregate = fluentAggregate.Match(g => g.ExternalId.StartsWith(search));
+                geofencesPipeline = geofencesPipeline.Match(g => g.ExternalId.StartsWith(search));
             }
-
-            var geofences = await fluentAggregate.Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
+            var geofences = await geofencesPipeline.Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
                 .Sort(getSortStage(orderBy, sortOrder))
                 .Skip(page * pageCount)
                 .Limit(pageCount)
                 .As<Geofence>()
                 .ToListAsync(cancellationToken);
 
-            var totalCount = await geofenceCollection.Aggregate()
-                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
-                .Count()
-                .SingleOrDefaultAsync(cancellationToken);
+
+            var totalCountPipeline = geofenceCollection.Aggregate().Match(g => g.TenantId == tenantId && g.ProjectId == projectId);
+            if (!String.IsNullOrWhiteSpace(search))
+            {
+                totalCountPipeline = totalCountPipeline.Match(g => g.ExternalId.StartsWith(search));
+            }
+            var totalCount = await totalCountPipeline.Count().SingleOrDefaultAsync(cancellationToken);
             return (geofences, totalCount?.Count ?? 0);
         }
 
