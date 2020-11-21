@@ -152,6 +152,9 @@ namespace Ranger.Services.Geofences
                 .SubscribeCommandWithHandler<DeleteGeofence>((c, e) =>
                     new DeleteGeofenceRejected(e.Message, "")
                 )
+                .SubscribeCommandWithHandler<BulkDeleteGeofences>((c, e) =>
+                    new BulkDeleteGeofencesRejected(e.Message, "")
+                )
                 .SubscribeCommandWithHandler<PurgeIntegrationFromGeofences>((c, e) =>
                     new PurgeIntegrationFromGeofencesRejected(e.Message, "")
                 )

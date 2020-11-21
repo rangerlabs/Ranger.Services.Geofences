@@ -111,7 +111,7 @@ namespace Ranger.Services.Geofences.Data
                 logger.LogError(ex, "An unexpected error occurred updating geofence {ExternalId}", geofence.ExternalId);
                 throw new RangerException($"An unexpected error occurred updating geofence '{geofence.ExternalId}'");
             }
-            await insertUpsertedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
+            await insertUpdatedChangeLog(currentGeofence, geofence, commandingUserEmailOrTokenPrefix);
         }
 
         public async Task DeleteGeofence(string tenantId, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix)
@@ -139,6 +139,31 @@ namespace Ranger.Services.Geofences.Data
                 (_) => _.TenantId == tenantId && _.ProjectId == projectId && _.ExternalId == externalId
             );
             await insertDeletedChangeLog(tenantId, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
+        }
+
+        public async Task BulkDeleteGeofence(string tenantId, Guid projectId, IEnumerable<string> externalIds, string commandingUserEmailOrTokenPrefix)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            }
+            if (externalIds is null || externalIds.Count() is 0)
+            {
+                throw new ArgumentException($"{nameof(externalIds)} must not be null or empty");
+            }
+            if (string.IsNullOrWhiteSpace(commandingUserEmailOrTokenPrefix))
+            {
+                throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
+            }
+
+            var geofenceIds = await getAllGeofenceForBulkDelete(tenantId, projectId, externalIds);
+            if (geofenceIds is null)
+            {
+                throw new RangerException($"No geofences could not be found for the bulk delete operation");
+            }
+
+            await geofenceCollection.DeleteManyAsync((_) => _.TenantId == tenantId && _.ProjectId == projectId && geofenceIds.Contains(_.Id));
+            await insertBulkDeletedChangeLogs(tenantId, projectId, geofenceIds, commandingUserEmailOrTokenPrefix);
         }
 
         public async Task<Geofence> GetGeofenceOrDefaultAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken))
@@ -436,14 +461,12 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            var geofences = await geofenceCollection.Aggregate()
+            return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId)
                 .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
                 .Sort("{CreatedDate:1}")
                 .As<Geofence>()
                 .ToListAsync(cancellationToken);
-
-            return geofences;
         }
 
         public async Task<(IEnumerable<Geofence> geofences, long totalCount)> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string search = null, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.DescendingLowerInvariant, int page = 1, int pageCount = 100, CancellationToken cancellationToken = default(CancellationToken))
@@ -482,6 +505,23 @@ namespace Ranger.Services.Geofences.Data
             : "{" + OrderByOptions.NamingMap(orderBy) + ":" + GeofenceSortOrders.SortOrderMap(sortOrder) + ", " + OrderByOptions.CreatedDate + ":" + GeofenceSortOrders.Descending + "}";
         }
 
+        private async Task<IEnumerable<Guid>> getAllGeofenceForBulkDelete(string tenantId, Guid projectId, IEnumerable<string> geofenceExternalIds, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
+            }
+            if (geofenceExternalIds is null || geofenceExternalIds.Count() is 0)
+            {
+                throw new ArgumentException($"{nameof(geofenceExternalIds)} must not be null or empty");
+            }
+
+            return await geofenceCollection.Aggregate()
+                .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && geofenceExternalIds.Contains(g.ExternalId))
+                .Project("{_id:1}")
+                .As<Guid>()
+                .ToListAsync(cancellationToken);
+        }
 
         private async Task insertDeletedChangeLog(string tenantId, Guid projectId, Guid geofenceId, string commandingUserEmailOrTokenPrefix)
         {
@@ -491,6 +531,21 @@ namespace Ranger.Services.Geofences.Data
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
             changeLog.Event = "GeofenceDeleted";
             await geofenceChangeLogCollection.InsertOneAsync(changeLog);
+        }
+
+        private async Task insertBulkDeletedChangeLogs(string tenantId, Guid projectId, IEnumerable<Guid> geofenceIds, string commandingUserEmailOrTokenPrefix)
+        {
+            var changeLogs = new List<GeofenceChangeLog>();
+            foreach (var id in geofenceIds)
+            {
+                var changeLog = new GeofenceChangeLog(Guid.NewGuid(), tenantId);
+                changeLog.GeofenceId = id;
+                changeLog.ProjectId = projectId;
+                changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
+                changeLog.Event = "GeofenceDeleted";
+                changeLogs.Add(changeLog);
+            }
+            await geofenceChangeLogCollection.InsertManyAsync(changeLogs);
         }
 
         private async Task insertCreatedChangeLog(Geofence geofence, string commandingUserEmailOrTokenPrefix)
@@ -504,7 +559,7 @@ namespace Ranger.Services.Geofences.Data
             await geofenceChangeLogCollection.InsertOneAsync(changeLog);
         }
 
-        private async Task insertUpsertedChangeLog(Geofence currentGeofence, Geofence updatedGeofence, string commandingUserEmailOrTokenPrefix)
+        private async Task insertUpdatedChangeLog(Geofence currentGeofence, Geofence updatedGeofence, string commandingUserEmailOrTokenPrefix)
         {
             var changeLog = new GeofenceChangeLog(Guid.NewGuid(), updatedGeofence.TenantId);
             if (currentGeofence != null)
@@ -519,7 +574,7 @@ namespace Ranger.Services.Geofences.Data
             changeLog.GeofenceId = updatedGeofence.Id;
             changeLog.ProjectId = updatedGeofence.ProjectId;
             changeLog.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
-            changeLog.Event = "GeofenceUpserted";
+            changeLog.Event = "GeofenceUpdated";
             await geofenceChangeLogCollection.InsertOneAsync(changeLog);
         }
     }

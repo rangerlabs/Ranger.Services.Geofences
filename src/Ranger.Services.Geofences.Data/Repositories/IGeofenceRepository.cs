@@ -9,7 +9,7 @@ namespace Ranger.Services.Geofences.Data
 {
     public interface IGeofenceRepository
     {
-        IMongoDatabase Database {get;}
+        IMongoDatabase Database { get; }
         Task AddGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix);
         Task UpdateGeofence(Geofence geofence, string commandingUserEmailOrTokenPrefix);
         Task DeleteGeofence(string tenantId, Guid projectId, string externalId, string commandingUserEmailOrTokenPrefix);
@@ -24,5 +24,6 @@ namespace Ranger.Services.Geofences.Data
         Task<long> GetGeofencesCountForProjectAsync(string tenantId, Guid projectId, CancellationToken cancellationToken = default(CancellationToken));
         Task<(IEnumerable<Geofence> geofences, long totalCount)> GetPaginatedGeofencesByProjectId(string tenantId, Guid projectId, string search = null, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.DescendingLowerInvariant, int page = 1, int pageCount = 100, CancellationToken cancellationToken = default(CancellationToken));
         Task<IEnumerable<Geofence>> GetGeofencesByBoundingBox(string tenantId, Guid projectId, IEnumerable<LngLat> boundingBox, string orderBy = OrderByOptions.CreatedDateLowerInvariant, string sortOrder = GeofenceSortOrders.Descending, CancellationToken cancellationToken = default(CancellationToken));
+        Task BulkDeleteGeofence(string tenantId, Guid projectId, IEnumerable<string> externalIds, string commandingUserEmailOrTokenPrefix);
     }
 }
