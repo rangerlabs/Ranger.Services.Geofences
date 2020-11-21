@@ -18,9 +18,9 @@ namespace Ranger.Services.Geofences
             {
                 throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
-            if (externalIds is null || externalIds.Count() is 0)
+            if (externalIds is null || !externalIds.Any())
             {
-                throw new System.ArgumentException($"{nameof(externalIds)} must not be default or empty");
+                throw new System.ArgumentException($"{nameof(externalIds)} must not be null or empty");
             }
             this.CommandingUserEmailOrTokenPrefix = commandingUserEmailOrTokenPrefix;
             this.TenantId = tenantId;
