@@ -156,11 +156,12 @@ namespace Ranger.Services.Geofences.Data
                 throw new ArgumentException($"{nameof(commandingUserEmailOrTokenPrefix)} was null or whitespace");
             }
 
-            var geofenceIds = await getAllGeofenceForBulkDelete(tenantId, projectId, externalIds);
-            if (geofenceIds is null)
+            var geofences = await getAllGeofenceForBulkDelete(tenantId, projectId, externalIds);
+            if (geofences is null)
             {
                 throw new RangerException($"No geofences could not be found for the bulk delete operation");
             }
+            var geofenceIds = geofences.Select(g => g.Id);
 
             await geofenceCollection.DeleteManyAsync((_) => _.TenantId == tenantId && _.ProjectId == projectId && geofenceIds.Contains(_.Id));
             await insertBulkDeletedChangeLogs(tenantId, projectId, geofenceIds, commandingUserEmailOrTokenPrefix);
@@ -505,7 +506,7 @@ namespace Ranger.Services.Geofences.Data
             : "{" + OrderByOptions.NamingMap(orderBy) + ":" + GeofenceSortOrders.SortOrderMap(sortOrder) + ", " + OrderByOptions.CreatedDate + ":" + GeofenceSortOrders.Descending + "}";
         }
 
-        private async Task<IEnumerable<Guid>> getAllGeofenceForBulkDelete(string tenantId, Guid projectId, IEnumerable<string> geofenceExternalIds, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task<IEnumerable<Geofence>> getAllGeofenceForBulkDelete(string tenantId, Guid projectId, IEnumerable<string> geofenceExternalIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -518,8 +519,8 @@ namespace Ranger.Services.Geofences.Data
 
             return await geofenceCollection.Aggregate()
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && geofenceExternalIds.Contains(g.ExternalId))
-                .Project("{_id:1}")
-                .As<Guid>()
+                .Project("{_id:1,Description:1,Enabled:1,ExpirationDate:1,ExternalId:1,GeoJsonGeometry:1,IntegrationIds:1,Labels:1,LaunchDate:1,Metadata:1,OnEnter:1,OnDwell:1,OnExit:1,ProjectId:1,Radius:1,Schedule:1,Shape:1,CreatedDate:1,UpdatedDate:1}")
+                .As<Geofence>()
                 .ToListAsync(cancellationToken);
         }
 
