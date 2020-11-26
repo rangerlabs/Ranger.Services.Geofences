@@ -28,8 +28,8 @@ namespace Ranger.Services.Geofences
         {
             try
             {
-                await repository.BulkDeleteGeofence(command.TenantId, command.ProjectId, command.ExternalIds, command.CommandingUserEmailOrTokenPrefix);
-                busPublisher.Publish(new GeofencesBulkDeleted(command.TenantId), CorrelationContext.FromId(context.CorrelationContextId));
+                var deletedIds = await repository.BulkDeleteGeofence(command.TenantId, command.ProjectId, command.ExternalIds, command.CommandingUserEmailOrTokenPrefix);
+                busPublisher.Publish(new GeofencesBulkDeleted(command.TenantId, deletedIds), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (RangerException)
             {

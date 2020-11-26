@@ -141,7 +141,7 @@ namespace Ranger.Services.Geofences.Data
             await insertDeletedChangeLog(tenantId, projectId, geofence.Id, commandingUserEmailOrTokenPrefix);
         }
 
-        public async Task BulkDeleteGeofence(string tenantId, Guid projectId, IEnumerable<string> externalIds, string commandingUserEmailOrTokenPrefix)
+        public async Task<IEnumerable<Guid>> BulkDeleteGeofence(string tenantId, Guid projectId, IEnumerable<string> externalIds, string commandingUserEmailOrTokenPrefix)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -165,6 +165,7 @@ namespace Ranger.Services.Geofences.Data
 
             await geofenceCollection.DeleteManyAsync((_) => _.TenantId == tenantId && _.ProjectId == projectId && geofenceIds.Contains(_.Id));
             await insertBulkDeletedChangeLogs(tenantId, projectId, geofenceIds, commandingUserEmailOrTokenPrefix);
+            return geofenceIds;
         }
 
         public async Task<Geofence> GetGeofenceOrDefaultAsync(string tenantId, Guid projectId, string externalId, CancellationToken cancellationToken = default(CancellationToken))
@@ -195,7 +196,6 @@ namespace Ranger.Services.Geofences.Data
                 .Match(g => g.TenantId == tenantId && g.ProjectId == projectId && geofenceIds.Contains(g.Id))
                 .ToListAsync(cancellationToken);
         }
-
 
         public async Task<long> GetAllActiveGeofencesCountAsync(string tenantId, IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken))
         {
