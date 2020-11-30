@@ -316,7 +316,7 @@ namespace Ranger.Services.Geofences.Data
                         {"TenantId", tenantId},
                         {"ProjectId", BsonBinaryData.Create(projectId)
                     }}
-                });
+                }});
 
             circularSubPipeline.Add(
                 new BsonDocument{
