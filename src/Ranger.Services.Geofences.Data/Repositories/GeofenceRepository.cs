@@ -265,14 +265,6 @@ namespace Ranger.Services.Geofences.Data
 
             circularSubPipeline.Add(
                 new BsonDocument{
-                    {"$match", new BsonDocument{
-                        {"TenantId", tenantId},
-                        {"ProjectId", BsonBinaryData.Create(projectId)}
-                    }}
-                });
-
-            circularSubPipeline.Add(
-                new BsonDocument{
                     {"$geoNear", new BsonDocument{
                         {"near", new BsonDocument{
                             {"type", "Point"},
@@ -321,6 +313,8 @@ namespace Ranger.Services.Geofences.Data
                         {"CalculatedDiff", new BsonDocument{
                             {"$lte", 0}
                         }},
+                        {"TenantId", tenantId},
+                        {"ProjectId", BsonBinaryData.Create(projectId)
                     }}
                 });
 
